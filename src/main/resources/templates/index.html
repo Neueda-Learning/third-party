@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付处理系统</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💳 支付处理系统</h1>
+            <nav>
+                <ul>
+                    <li><a href="#create" class="nav-link active">创建支付</a></li>
+                    <li><a href="#list" class="nav-link">支付列表</a></li>
+                    <li><a href="#detail" class="nav-link">支付详情</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- 创建支付模块 -->
+            <section id="create" class="module create-module">
+                <h2>创建支付</h2>
+                <form id="createForm" class="form">
+                    <div class="form-group">
+                        <label for="sourceAccount">付款账户 <span class="required">*</span></label>
+                        <input type="text" id="sourceAccount" name="sourceAccount"
+                               placeholder="e.g., ACC001" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destinationAccount">收款账户 <span class="required">*</span></label>
+                        <input type="text" id="destinationAccount" name="destinationAccount"
+                               placeholder="e.g., ACC002" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">金额（CNY）<span class="required">*</span></label>
+                        <input type="number" id="amount" name="amount" step="0.01"
+                               placeholder="1500.50" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reference">参考号/备注</label>
+                        <input type="text" id="reference" name="reference"
+                               placeholder="e.g., INV-20260727">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idempotencyKey">幂等键（系统生成）</label>
+                        <input type="text" id="idempotencyKey" readonly class="readonly-input">
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" id="generateKeyBtn" class="btn btn-secondary">生成幂等键</button>
+                        <button type="submit" class="btn btn-primary">提交</button>
+                        <button type="reset" class="btn btn-outline">重置</button>
+                    </div>
+                </form>
+
+                <div id="createResult" class="result"></div>
+            </section>
+
+            <!-- 支付列表模块 -->
+            <section id="list" class="module list-module">
+                <h2>支付列表</h2>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="statusFilter">状态筛选：</label>
+                        <select id="statusFilter">
+                            <option value="">全部</option>
+                            <option value="CREATED">已创建</option>
+                            <option value="VALIDATED">已验证</option>
+                            <option value="SENT">已发送</option>
+                            <option value="COMPLETED">已完成</option>
+                            <option value="FAILED">失败</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="pageSize">分页：</label>
+                        <select id="pageSize">
+                            <option value="10">10条/页</option>
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                        </select>
+                    </div>
+                    <button id="queryBtn" class="btn btn-primary">查询</button>
+                </div>
+
+                <table id="paymentTable" class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>幂等键</th>
+                            <th>付款账户</th>
+                            <th>收款账户</th>
+                            <th>金额(CNY)</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="loading">
+                            <td colspan="8">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div id="pagination" class="pagination"></div>
+            </section>
+
+            <!-- 支付详情模块 -->
+            <section id="detail" class="module detail-module">
+                <h2>支付详情</h2>
+                <div class="detail-search">
+                    <input type="number" id="detailPaymentId" placeholder="输入支付ID" min="1">
+                    <button id="detailQueryBtn" class="btn btn-primary">查询</button>
+                </div>
+
+                <div id="detailContent" class="detail-content"></div>
+
+                <div id="historySection" class="history-section" style="display:none;">
+                    <h3>状态变更历史</h3>
+                    <div id="historyTimeline" class="timeline"></div>
+                </div>
+
+                <div id="operationsSection" class="operations-section" style="display:none;">
+                    <h3>手动操作（演示用）</h3>
+                    <div id="operationButtons" class="button-group"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 支付处理系统 | JDBC Template + MySQL + 15分钟超时</p>
+        </footer>
+    </div>
+
+    <script src="static/js/api.js"></script>
+    <script src="static/js/main.js"></script>
+</body>
+</html>
+
