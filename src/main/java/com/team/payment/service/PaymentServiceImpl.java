@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -27,8 +25,35 @@ import java.util.stream.Collectors;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-	@Autowired
-	private PaymentDao paymentDao;
+    @Autowired
+    private PaymentDao paymentDao;
+
+    @Autowired
+    private PaymentHistoryDao paymentHistoryDao;
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HistoryResponse> getPaymentHistory(Long paymentId) {
+        Payment payment = paymentDao.findById(paymentId);
+        if (payment == null) {
+            throw new PaymentNotFoundException(paymentId);
+        }
+
+        return paymentHistoryDao.findByPaymentId(paymentId).stream()
+            .map(this::toHistoryResponse)
+            .collect(Collectors.toList());
+    }
+
+    private HistoryResponse toHistoryResponse(PaymentHistory history) {
+        return HistoryResponse.builder()
+            .fromStatus(history.getFromStatus())
+            .toStatus(history.getToStatus())
+            .reason(history.getReason())
+            .triggeredBy(history.getTriggeredBy())
+            .createdAt(history.getCreatedAt())
+            .build();
+    }
 
 	private PaymentResponse toResponse(Payment payment) {
 		if (payment == null) {
@@ -49,16 +74,6 @@ public class PaymentServiceImpl implements PaymentService {
 			.createdAt(payment.getCreatedAt())
 			.updatedAt(payment.getUpdatedAt())
 			.build();
-	}
-
-	@Override
-	public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
-		throw new UnsupportedOperationException("创建支付功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse getPaymentDetail(Long paymentId) {
-		throw new UnsupportedOperationException("支付详情功能暂未实现");
 	}
 
 	@Override
@@ -91,29 +106,6 @@ public class PaymentServiceImpl implements PaymentService {
 			.build();
 	}
 
-	@Override
-	public List<HistoryResponse> getPaymentHistory(Long paymentId) {
-		throw new UnsupportedOperationException("支付历史功能暂未实现");
-	}
 
-	@Override
-	public PaymentResponse validatePayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse sendPayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse completePayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
 }
 

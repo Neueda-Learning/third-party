@@ -25,34 +25,8 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    /**
-     * POST /api/payments
-     * 创建支付
-     * 成员A负责实现
-     *
-     * 请求头: Idempotency-Key: client-provided-key
-     * 响应码: 201 Created (新建) / 200 OK (幂等重复) / 409 Conflict (幂等键冲突) / 400 Bad Request (校验失败)
-     */
-    @PostMapping
-    public ResponseEntity<PaymentResponse> createPayment(
-            @Valid @RequestBody CreatePaymentRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = true) String idempotencyKey) {
-        // TODO: 成员A 实现
-        throw new UnsupportedOperationException("创建支付功能暂未实现");
-    }
 
-    /**
-     * GET /api/payments/{id}
-     * 查询支付详情
-     * 成员C负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponse> getPaymentDetail(@PathVariable Long id) {
-        // TODO: 成员C 实现
-        throw new UnsupportedOperationException("支付详情功能暂未实现");
-    }
+
 
     /**
      * GET /api/payments?status=CREATED&page=0&size=20
@@ -83,70 +57,9 @@ public class PaymentController {
      * 响应码: 200 OK / 404 Not Found
      */
     @GetMapping("/{id}/history")
-    public ResponseEntity<List<HistoryResponse>> getPaymentHistory(@PathVariable Long id) {
-        // TODO: 成员C 实现
-        throw new UnsupportedOperationException("支付历史功能暂未实现");
-    }
-
-    /**
-     * POST /api/payments/{id}/validate
-     * 手动推进状态为VALIDATED（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/validate")
-    public ResponseEntity<PaymentResponse> validatePayment(@PathVariable Long id) {
-        // TODO: 成员B 实现
-        throw new UnsupportedOperationException("validate功能暂未实现");
-    }
-
-    /**
-     * POST /api/payments/{id}/send
-     * 手动推进状态为SENT（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/send")
-    public ResponseEntity<PaymentResponse> sendPayment(@PathVariable Long id) {
-        // TODO: 成员B 实现
-        throw new UnsupportedOperationException("send功能暂未实现");
-    }
-
-    /**
-     * POST /api/payments/{id}/complete
-     * 手动推进状态为COMPLETED（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/complete")
-    public ResponseEntity<PaymentResponse> completePayment(@PathVariable Long id) {
-        // TODO: 成员B 实现
-        throw new UnsupportedOperationException("complete功能暂未实现");
-    }
-
-    /**
-     * POST /api/payments/{id}/fail
-     * 手动推进状态为FAILED（演示用）
-     * 成员B负责实现
-     *
-     * 请求体:
-     * {
-     *   "errorCode": "BUSINESS_ERROR",
-     *   "errorMessage": "业务规则检查失败"
-     * }
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/fail")
-    public ResponseEntity<PaymentResponse> failPayment(
-            @PathVariable Long id,
-            @RequestParam(value = "errorCode", defaultValue = "PROCESSING_ERROR") String errorCode,
-            @RequestParam(value = "errorMessage", defaultValue = "Payment failed") String errorMessage) {
-        // TODO: 成员B 实现
-        throw new UnsupportedOperationException("fail功能暂未实现");
+    public ResponseEntity<List<HistoryResponse>> getPaymentHistory(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(paymentService.getPaymentHistory(id));
     }
 }
+
 
