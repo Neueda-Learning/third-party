@@ -49,7 +49,7 @@ class PaymentControllerTest {
         when(paymentService.createPayment(any(CreatePaymentRequest.class), eq("idem-1"))).thenReturn(response);
 
         mockMvc.perform(post("/api/payments")
-                        .param("idempotencyKey", "idem-1")
+                        .header("Idempotency-Key", "idem-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -71,7 +71,7 @@ class PaymentControllerTest {
         when(paymentService.createPayment(any(CreatePaymentRequest.class), eq("idem-2"))).thenReturn(response);
 
         mockMvc.perform(post("/api/payments")
-                        .param("idempotencyKey", "idem-2")
+                        .header("Idempotency-Key", "idem-2")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -88,7 +88,7 @@ class PaymentControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/payments")
-                        .param("idempotencyKey", "idem-3")
+                        .header("Idempotency-Key", "idem-3")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -103,7 +103,7 @@ class PaymentControllerTest {
                 .thenThrow(new PaymentException("DUPLICATE_IDEMPOTENCY_KEY", "Duplicate key"));
 
         mockMvc.perform(post("/api/payments")
-                        .param("idempotencyKey", "idem-dup")
+                        .header("Idempotency-Key", "idem-dup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -120,4 +120,3 @@ class PaymentControllerTest {
                 .build();
     }
 }
-

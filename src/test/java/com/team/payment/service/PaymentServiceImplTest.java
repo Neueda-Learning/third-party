@@ -116,13 +116,13 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void shouldCreatePaymentWhenRequestValid() {
+    void shouldReturnCreatedSnapshotWhenRequestValid() {
         mockAutoLifecycle("CNY");
         CreatePaymentRequest request = validRequestBuilder().build();
 
         PaymentResponse response = paymentService.createPayment(request, "idem-7");
 
-        assertEquals("COMPLETED", response.getStatus());
+        assertEquals("CREATED", response.getStatus());
         assertNull(response.getErrorCode());
         assertNull(response.getErrorMessage());
         assertEquals("CNY", response.getCurrency());
@@ -145,7 +145,7 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void shouldAcceptLowercaseIso4217Currency() {
+    void shouldAcceptLowercaseIso4217CurrencyAndReturnCreatedSnapshot() {
         mockAutoLifecycle("USD");
         CreatePaymentRequest request = validRequestBuilder()
                 .currency("usd")
@@ -153,7 +153,8 @@ class PaymentServiceImplTest {
 
         PaymentResponse response = paymentService.createPayment(request, "idem-9");
 
-        assertEquals("COMPLETED", response.getStatus());
+        assertEquals("CREATED", response.getStatus());
+        assertEquals("USD", response.getCurrency());
         verify(paymentDao, times(1)).create(any());
         verify(paymentHistoryDao, times(4)).insert(any());
     }
