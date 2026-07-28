@@ -23,19 +23,21 @@ public interface PaymentService {
      * 手动推进支付状态为VALIDATED（演示用）
      */
     PaymentResponse validatePayment(Long paymentId);
+    /**
+     * 根据ID查询支付详情
+     */
+    PaymentResponse getPaymentDetail(Long paymentId);
 
     /**
-     * 手动推进支付状态为SENT（演示用）
+     * 分页查询支付列表
      */
-    PaymentResponse sendPayment(Long paymentId);
+    PaymentListResponse listPayments(int page, int size, String status);
 
     /**
-     * 手动推进支付状态为COMPLETED（演示用）
+     * 查询支付历史
      */
-    PaymentResponse completePayment(Long paymentId);
+    List<HistoryResponse> getPaymentHistory(Long paymentId);
 
-    /**
-     * 手动推进支付状态为FAILED（演示用）
-     */
-    PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage);
+
+
 }
