@@ -1,10 +1,13 @@
 package com.team.payment.controller;
 
+import com.team.payment.dao.PaymentDao;
 import com.team.payment.dto.CreatePaymentRequest;
 import com.team.payment.dto.HistoryResponse;
 import com.team.payment.dto.PaymentListResponse;
 import com.team.payment.dto.PaymentResponse;
 import com.team.payment.service.PaymentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,8 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class PaymentController {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
+
     @Autowired
     private PaymentService paymentService;
 
@@ -35,55 +40,20 @@ public class PaymentController {
      */
     @PostMapping
     public ResponseEntity<PaymentResponse> createPayment(
-            @Valid @RequestBody CreatePaymentRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = true) String idempotencyKey) {
+            @Valid @RequestBody CreatePaymentRequest request){
+        PaymentResponse response = paymentService.createPayment(request, String .valueOf(UUID.randomUUID()));
+        log.info("Create payment finished with status={}", response.getStatus());
+        if (response.getStatus().equals("CREATED")) {
+            log.info("Payment created successfully");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            log.warn("Payment creation failed. errorCode={}, errorMessage={}", response.getErrorCode(), response.getErrorMessage());
+            return ResponseEntity.ok(response);
+
+        }
 
     }
 
-    /**
-     * GET /api/payments/{id}
-     * 查询支付详情
-     * 成员C负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponse> getPaymentDetail(@PathVariable Long id) {
-
-    }
-
-    /**
-     * GET /api/payments?status=CREATED&page=0&size=20
-     * 列表查询（分页+筛选）
-     * 成员C负责实现
-     *
-     * 查询参数:
-     *   - status: 筛选状态（可选）
-     *   - page: 页码（从0开始，默认0）
-     *   - size: 页大小（默认20）
-     *
-     * 响应码: 200 OK
-     */
-    @GetMapping
-    public ResponseEntity<PaymentListResponse> listPayments(
-            @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size) {
-
-
-    }
-
-    /**
-     * GET /api/payments/{id}/history
-     * 查询支付历史
-     * 成员C负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found
-     */
-    @GetMapping("/{id}/history")
-    public ResponseEntity<List<HistoryResponse>> getPaymentHistory(@PathVariable Long id) {
-
-    }
 
     /**
      * POST /api/payments/{id}/validate
@@ -95,19 +65,10 @@ public class PaymentController {
     @PostMapping("/{id}/validate")
     public ResponseEntity<PaymentResponse> validatePayment(@PathVariable Long id) {
 
+        return null;
     }
 
-    /**
-     * POST /api/payments/{id}/send
-     * 手动推进状态为SENT（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/send")
-    public ResponseEntity<PaymentResponse> sendPayment(@PathVariable Long id) {
 
-    }
 
     /**
      * POST /api/payments/{id}/complete
@@ -119,6 +80,7 @@ public class PaymentController {
     @PostMapping("/{id}/complete")
     public ResponseEntity<PaymentResponse> completePayment(@PathVariable Long id) {
 
+        return null;
     }
 
     /**
@@ -141,6 +103,6 @@ public class PaymentController {
             @RequestParam(value = "errorMessage", defaultValue = "Payment failed") String errorMessage) {
 
 
+        return null;
     }
 }
-

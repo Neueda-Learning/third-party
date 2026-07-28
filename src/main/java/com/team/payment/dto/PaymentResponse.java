@@ -1,5 +1,6 @@
 package com.team.payment.dto;
 
+import com.team.payment.entity.Payment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -53,5 +54,22 @@ public class PaymentResponse {
 
     /** 更新时间 */
     private LocalDateTime updatedAt;
+
+    public static PaymentResponse fromEntity(Payment payment) {
+        return PaymentResponse.builder()
+                .id(payment.getId())
+                .idempotencyKey(payment.getIdempotencyKey())
+                .sourceAccount(payment.getSourceAccount())
+                .destinationAccount(payment.getDestinationAccount())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .status(payment.getStatus())
+                .errorCode(payment.getErrorCode())
+                .errorMessage(payment.getErrorMessage())
+                .reference(payment.getReference())
+                .createdAt(payment.getCreatedAt())
+                .updatedAt(payment.getUpdatedAt())
+                .build();
+    }
 }
 

@@ -20,21 +20,6 @@ public interface PaymentService {
     PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey);
 
     /**
-     * 根据ID查询支付详情
-     */
-    PaymentResponse getPaymentDetail(Long paymentId);
-
-    /**
-     * 分页查询支付列表
-     */
-    PaymentListResponse listPayments(int page, int size, String status);
-
-    /**
-     * 查询支付历史
-     */
-    List<HistoryResponse> getPaymentHistory(Long paymentId);
-
-    /**
      * 手动推进支付状态为VALIDATED（演示用）
      */
     PaymentResponse validatePayment(Long paymentId);
@@ -54,4 +39,3 @@ public interface PaymentService {
      */
     PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage);
 }
-

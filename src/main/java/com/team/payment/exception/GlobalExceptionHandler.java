@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
             .timestamp(LocalDateTime.now())
             .traceId(UUID.randomUUID().toString())
             .build();
-
+        System.out.println("Unhandled exception: " + e);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
