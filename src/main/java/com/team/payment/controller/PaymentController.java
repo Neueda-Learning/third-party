@@ -40,8 +40,8 @@ public class PaymentController {
      */
     @PostMapping
     public ResponseEntity<PaymentResponse> createPayment(
-            @Valid @RequestBody CreatePaymentRequest request){
-        PaymentResponse response = paymentService.createPayment(request, String .valueOf(UUID.randomUUID()));
+            @Valid @RequestBody CreatePaymentRequest request,@RequestHeader("Idempotency-Key")  String idempotencyKey) {
+        PaymentResponse response = paymentService.createPayment(request, idempotencyKey);
         log.info("Create payment finished with status={}", response.getStatus());
         if (response.getStatus().equals("CREATED")) {
             log.info("Payment created successfully");
