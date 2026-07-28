@@ -2,7 +2,7 @@
 
 本project是基于设计文档 `design_final.md` 生成的完整项目框架代码。
 
-## 📋 项目结构
+##  项目结构
 
 ```
 payment-system/
@@ -71,7 +71,7 @@ payment-system/
 └── README.md                                # 本文档
 ```
 
-## 🚀 快速开始
+##  快速开始
 
 ### 前置要求
 
@@ -124,7 +124,7 @@ java -jar target/payment-system-1.0.0.jar --spring.profiles.active=dev
 
 打开浏览器访问：http://localhost:8080/
 
-## 📡 API 端点
+##  API 端点
 
 所有API都在 `/api/payments` 前缀下：
 
@@ -171,7 +171,7 @@ POST /api/payments/{id}/fail?errorCode=X&errorMessage=Y
 Response: 200 OK / 400 Bad Request
 ```
 
-## 🔄 业务流程
+##  业务流程
 
 ### 正常流程
 
@@ -201,7 +201,7 @@ Response: 200 OK / 400 Bad Request
 返回: 409 Conflict + 错误信息
 ```
 
-## 📊 状态机规则
+##  状态机规则
 
 ```
 CREATED
@@ -233,7 +233,7 @@ payment:
     failure-rate: 0.1          # SENT超时时失败比例（10%）
 ```
 
-## 🧪 测试
+##  测试
 
 ### 运行所有测试
 
@@ -247,7 +247,7 @@ mvn test
 - **P1（重要）**：15分钟超时推进、分页、并发处理
 - **P2（增强）**：错误处理、traceId链路追踪
 
-## 👥 四人Team分工
+##  四人Team分工
 
 ### 成员A：创建与幂等
 - POST /api/payments 接口
@@ -272,7 +272,7 @@ mvn test
 - 单元测试与集成测试
 - CI/CD配置
 
-## 💡 关键技术点
+##  关键技术点
 
 ### 幂等性设计
 
@@ -338,7 +338,7 @@ public class GlobalExceptionHandler {
 }
 ```
 
-## 📝 前端特性
+##  前端特性
 
 - **创建支付**：表单校验、自动生成幂等键
 - **列表查询**：分页、按状态筛选
@@ -347,7 +347,7 @@ public class GlobalExceptionHandler {
 - **操作按钮**：根据当前状态动态显示可用的状态推进操作
 - **即时刷新**：实时展示状态变化
 
-## 🐛 常见问题
+##  常见问题
 
 ### Q: 如何修改超时时间？
 A: 编辑 `application.yml`，修改 `payment.scheduler.timeout-minutes`
@@ -364,7 +364,7 @@ A: 当前仅支持CNY，扩展方向可参考设计文档第15章
 ### Q: 支持什么样的并发控制？
 A: 使用 UNIQUE 约束和乐观锁（version字段），保证线程安全
 
-## 📚 扩展方向
+##  扩展方向
 
 核心功能完成后，可按优先级扩展：
 
@@ -372,7 +372,7 @@ A: 使用 UNIQUE 约束和乐观锁（version字段），保证线程安全
 - **P2**：批量支付、Webhook通知、撤销/冲正
 - **P3**：报表统计、审计日志、性能优化
 
-## 🤝 协作流程
+##  协作流程
 
 ### 分支策略
 
@@ -391,7 +391,7 @@ main（主分支）
 3. 提交 PR 进行代码审查
 4. Merge 到 main 分支
 
-## 📞 技术支持
+##  技术支持
 
 有问题请参考：
 - 设计文档：`design_final.md`
@@ -402,4 +402,3 @@ main（主分支）
 
 **项目启动日期**：2026-07-27  
 **技术栈**：Spring Boot 3.2 + Java 21 + JDBC Template + MySQL 8.0+
-
