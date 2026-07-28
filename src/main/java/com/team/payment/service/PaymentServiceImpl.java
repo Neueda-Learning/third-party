@@ -55,11 +55,6 @@ public class PaymentServiceImpl implements PaymentService {
             .build();
     }
 
-
-
-	@Autowired
-	private PaymentDao paymentDao;
-
 	private PaymentResponse toResponse(Payment payment) {
 		if (payment == null) {
 			return null;
@@ -79,16 +74,6 @@ public class PaymentServiceImpl implements PaymentService {
 			.createdAt(payment.getCreatedAt())
 			.updatedAt(payment.getUpdatedAt())
 			.build();
-	}
-
-	@Override
-	public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
-		throw new UnsupportedOperationException("创建支付功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse getPaymentDetail(Long paymentId) {
-		throw new UnsupportedOperationException("支付详情功能暂未实现");
 	}
 
 	@Override
@@ -121,29 +106,6 @@ public class PaymentServiceImpl implements PaymentService {
 			.build();
 	}
 
-	@Override
-	public List<HistoryResponse> getPaymentHistory(Long paymentId) {
-		throw new UnsupportedOperationException("支付历史功能暂未实现");
-	}
 
-	@Override
-	public PaymentResponse validatePayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse sendPayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse completePayment(Long paymentId) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
-
-	@Override
-	public PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage) {
-		throw new UnsupportedOperationException("状态推进功能暂未实现");
-	}
 }
 

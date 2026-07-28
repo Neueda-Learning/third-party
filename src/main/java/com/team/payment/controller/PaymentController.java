@@ -25,34 +25,8 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    /**
-     * POST /api/payments
-     * 创建支付
-     * 成员A负责实现
-     *
-     * 请求头: Idempotency-Key: client-provided-key
-     * 响应码: 201 Created (新建) / 200 OK (幂等重复) / 409 Conflict (幂等键冲突) / 400 Bad Request (校验失败)
-     */
-    @PostMapping
-    public ResponseEntity<PaymentResponse> createPayment(
-            @Valid @RequestBody CreatePaymentRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = true) String idempotencyKey) {
-        // TODO: 成员A 实现
-        throw new UnsupportedOperationException("创建支付功能暂未实现");
-    }
 
-    /**
-     * GET /api/payments/{id}
-     * 查询支付详情
-     * 成员C负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponse> getPaymentDetail(@PathVariable Long id) {
-        // TODO: 成员C 实现
-        throw new UnsupportedOperationException("支付详情功能暂未实现");
-    }
+
 
     /**
      * GET /api/payments?status=CREATED&page=0&size=20

@@ -1,6 +1,7 @@
 package com.team.payment.service;
 
 import com.team.payment.dto.HistoryResponse;
+import com.team.payment.dto.PaymentListResponse;
 
 import java.util.List;
 
@@ -13,5 +14,7 @@ public interface PaymentService {
      * 查询支付历史
      */
     List<HistoryResponse> getPaymentHistory(Long paymentId);
+
+    PaymentListResponse listPayments(int page, int size, String status);
 }
 
