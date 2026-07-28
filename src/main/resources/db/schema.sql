@@ -24,7 +24,7 @@ CREATE TABLE payments (
     version BIGINT NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    
+
     CONSTRAINT chk_amount CHECK (amount > 0),
     CONSTRAINT chk_accounts_diff CHECK (source_account <> destination_account),
     INDEX idx_status (status),
@@ -42,7 +42,7 @@ CREATE TABLE payment_history (
     reason VARCHAR(255) NULL COMMENT '变更原因',
     triggered_by VARCHAR(50) NOT NULL COMMENT '触发方（API/SCHEDULER/SYSTEM）',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录时间',
-    
+
     CONSTRAINT fk_history_payment FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
     INDEX idx_payment_id (payment_id),
     INDEX idx_created_at (created_at)
@@ -52,17 +52,18 @@ CREATE TABLE payment_history (
 -- 演示数据用于测试
 
 INSERT INTO payments (idempotency_key, source_account, destination_account, amount, currency, status, reference)
-VALUES 
+VALUES
     ('demo-key-001', 'ACC001', 'ACC002', 1500.50, 'CNY', 'CREATED', 'INV-20260727-001'),
     ('demo-key-002', 'ACC003', 'ACC004', 2500.00, 'CNY', 'VALIDATED', 'INV-20260727-002'),
     ('demo-key-003', 'ACC005', 'ACC006', 3000.25, 'CNY', 'SENT', 'INV-20260727-003');
 
 -- 插入对应的历史记录
 INSERT INTO payment_history (payment_id, from_status, to_status, reason, triggered_by)
-VALUES 
+VALUES
     (1, NULL, 'CREATED', 'Payment created', 'API'),
     (2, NULL, 'CREATED', 'Payment created', 'API'),
     (2, 'CREATED', 'VALIDATED', 'Validation passed', 'SCHEDULER'),
     (3, NULL, 'CREATED', 'Payment created', 'API'),
     (3, 'CREATED', 'VALIDATED', 'Validation passed', 'SCHEDULER'),
     (3, 'VALIDATED', 'SENT', 'Payment sent', 'SCHEDULER');
+
