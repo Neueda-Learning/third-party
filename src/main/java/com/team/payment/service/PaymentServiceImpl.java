@@ -65,7 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
         log.info("Creating payment in service. idempotencyKey={}, request={}", idempotencyKey, request);
 
-        PaymentException validationError = validateRequest(request, idempotencyKey);
+        PaymentException validationError = validatePayment(request, idempotencyKey);
         if (validationError != null) {
             return PaymentResponse.builder()
                     .idempotencyKey(idempotencyKey)
@@ -105,23 +105,23 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         Payment created = paymentDao.create(payment);
+
         saveHistory(created.getId(), null, PaymentStatus.CREATED.name(), "Payment created", "API");
 
         if (shouldFail(createFailureRatio)) {
-            return failPaymentInternal(created.getId(), "CREATE_STEP_FAILED", "Create step failed by ratio", "SYSTEM");
+            failPaymentInternal(created.getId(), "CREATE_STEP_FAILED", "Create step failed accidentally", "SYSTEM");
+        } else {
+            PaymentResponse validated = validatePayment(created.getId());
+            if (!PaymentStatus.FAILED.name().equals(validated.getStatus())) {
+                PaymentResponse sent = sendPayment(created.getId());
+                if (!PaymentStatus.FAILED.name().equals(sent.getStatus())) {
+                    completePayment(created.getId());
+                }
+            }
         }
 
-        PaymentResponse validated = validatePayment(created.getId());
-        if (PaymentStatus.FAILED.name().equals(validated.getStatus())) {
-            return validated;
-        }
-
-        PaymentResponse sent = sendPayment(created.getId());
-        if (PaymentStatus.FAILED.name().equals(sent.getStatus())) {
-            return sent;
-        }
-
-        return completePayment(created.getId());
+// 创建接口始终返回“创建成功时”的快照
+        return PaymentResponse.fromEntity(created);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class PaymentServiceImpl implements PaymentService {
                 PaymentStatus.VALIDATED,
                 validateFailureRatio,
                 "VALIDATE_STEP_FAILED",
-                "Validation failed by ratio",
+                "Validation failed accidentally",
                 "Validation passed"
         );
     }
@@ -147,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
                 PaymentStatus.SENT,
                 sendFailureRatio,
                 "SEND_STEP_FAILED",
-                "Send failed by ratio",
+                "Send failed accidentally",
                 "Payment sent"
         );
     }
@@ -246,13 +246,19 @@ public class PaymentServiceImpl implements PaymentService {
                 .build());
     }
 
-    private PaymentException validateRequest(CreatePaymentRequest request, String idempotencyKey) {
+    private PaymentException validatePayment(CreatePaymentRequest request, String idempotencyKey) {
         if (request == null) {
             return new PaymentException("INVALID_REQUEST", "Request must not be null");
         }
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             return new PaymentException("INVALID_IDEMPOTENCY_KEY", "Idempotency key must not be blank");
+        }
+
+        String normalizedIdempotencyKey = idempotencyKey.trim();
+        Payment existingPayment = paymentDao.findByIdempotencyKey(normalizedIdempotencyKey);
+        if (existingPayment != null) {
+            return new PaymentException("DUPLICATE_IDEMPOTENCY_KEY", "Idempotency key already exists: " + normalizedIdempotencyKey);
         }
 
         String sourceAccount = request.getSourceAccount();

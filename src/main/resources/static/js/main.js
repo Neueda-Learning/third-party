@@ -107,7 +107,8 @@ async function handleCreatePayment(e) {
         const result = await PaymentAPI.createPayment(paymentData, idempotencyKey);
 
         if (result.code === 'SUCCESS') {
-            const isNew = result.status === 201;
+        console.log('创建支付结果:', result.status, result.data);
+            const isNew =  result.status === 201;
             const message = isNew
                 ? `✓ 支付创建成功! ID: ${result.data.id}`
                 : `✓ 重复请求，返回已存在的支付! ID: ${result.data.id}`;
@@ -118,6 +119,7 @@ async function handleCreatePayment(e) {
             // 重置表单
             document.getElementById('createForm').reset();
             generateIdempotencyKey();
+
         } else if (result.code === 'CONFLICT') {
             showResult('createResult', `✗ 幂等键冲突: ${result.data.message}`, 'error');
         } else {

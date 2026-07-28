@@ -40,8 +40,8 @@ public class PaymentController {
      */
     @PostMapping
     public ResponseEntity<PaymentResponse> createPayment(
-            @Valid @RequestBody CreatePaymentRequest request){
-        PaymentResponse response = paymentService.createPayment(request, String .valueOf(UUID.randomUUID()));
+            @Valid @RequestBody CreatePaymentRequest request,@RequestHeader("Idempotency-Key")  String idempotencyKey) {
+        PaymentResponse response = paymentService.createPayment(request, idempotencyKey);
         log.info("Create payment finished with status={}", response.getStatus());
         if (response.getStatus().equals("CREATED")) {
             log.info("Payment created successfully");
@@ -55,54 +55,5 @@ public class PaymentController {
     }
 
 
-    /**
-     * POST /api/payments/{id}/validate
-     * 手动推进状态为VALIDATED（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/validate")
-    public ResponseEntity<PaymentResponse> validatePayment(@PathVariable Long id) {
 
-        return null;
-    }
-
-
-
-    /**
-     * POST /api/payments/{id}/complete
-     * 手动推进状态为COMPLETED（演示用）
-     * 成员B负责实现
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/complete")
-    public ResponseEntity<PaymentResponse> completePayment(@PathVariable Long id) {
-
-        return null;
-    }
-
-    /**
-     * POST /api/payments/{id}/fail
-     * 手动推进状态为FAILED（演示用）
-     * 成员B负责实现
-     *
-     * 请求体:
-     * {
-     *   "errorCode": "BUSINESS_ERROR",
-     *   "errorMessage": "业务规则检查失败"
-     * }
-     *
-     * 响应码: 200 OK / 404 Not Found / 400 Bad Request
-     */
-    @PostMapping("/{id}/fail")
-    public ResponseEntity<PaymentResponse> failPayment(
-            @PathVariable Long id,
-            @RequestParam(value = "errorCode", defaultValue = "PROCESSING_ERROR") String errorCode,
-            @RequestParam(value = "errorMessage", defaultValue = "Payment failed") String errorMessage) {
-
-
-        return null;
-    }
 }
