@@ -1,18 +1,16 @@
 package com.team.payment.controller;
 
-import com.team.payment.dto.CreatePaymentRequest;
 import com.team.payment.dto.HistoryResponse;
 import com.team.payment.dto.PaymentListResponse;
 import com.team.payment.dto.PaymentResponse;
 import com.team.payment.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+
 import java.util.List;
-import java.util.UUID;
+
 
 /**
  * 支付REST API控制器
@@ -41,7 +39,7 @@ public class PaymentController {
     }
 
 
-}
+
 
     /**
      * GET /api/payments?status=CREATED&page=0&size=20
