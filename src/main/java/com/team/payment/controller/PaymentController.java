@@ -37,7 +37,8 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> createPayment(
             @Valid @RequestBody CreatePaymentRequest request,
             @RequestHeader(value = "Idempotency-Key", required = true) String idempotencyKey) {
-
+        // TODO: 成员A 实现
+        throw new UnsupportedOperationException("创建支付功能暂未实现");
     }
 
     /**
@@ -49,7 +50,8 @@ public class PaymentController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPaymentDetail(@PathVariable Long id) {
-
+        // TODO: 成员C 实现
+        throw new UnsupportedOperationException("支付详情功能暂未实现");
     }
 
     /**
@@ -69,8 +71,8 @@ public class PaymentController {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-
-
+        PaymentListResponse response = paymentService.listPayments(page, size, status);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -82,7 +84,8 @@ public class PaymentController {
      */
     @GetMapping("/{id}/history")
     public ResponseEntity<List<HistoryResponse>> getPaymentHistory(@PathVariable Long id) {
-
+        // TODO: 成员C 实现
+        throw new UnsupportedOperationException("支付历史功能暂未实现");
     }
 
     /**
@@ -94,7 +97,8 @@ public class PaymentController {
      */
     @PostMapping("/{id}/validate")
     public ResponseEntity<PaymentResponse> validatePayment(@PathVariable Long id) {
-
+        // TODO: 成员B 实现
+        throw new UnsupportedOperationException("validate功能暂未实现");
     }
 
     /**
@@ -106,7 +110,8 @@ public class PaymentController {
      */
     @PostMapping("/{id}/send")
     public ResponseEntity<PaymentResponse> sendPayment(@PathVariable Long id) {
-
+        // TODO: 成员B 实现
+        throw new UnsupportedOperationException("send功能暂未实现");
     }
 
     /**
@@ -118,7 +123,8 @@ public class PaymentController {
      */
     @PostMapping("/{id}/complete")
     public ResponseEntity<PaymentResponse> completePayment(@PathVariable Long id) {
-
+        // TODO: 成员B 实现
+        throw new UnsupportedOperationException("complete功能暂未实现");
     }
 
     /**
@@ -139,8 +145,8 @@ public class PaymentController {
             @PathVariable Long id,
             @RequestParam(value = "errorCode", defaultValue = "PROCESSING_ERROR") String errorCode,
             @RequestParam(value = "errorMessage", defaultValue = "Payment failed") String errorMessage) {
-
-
+        // TODO: 成员B 实现
+        throw new UnsupportedOperationException("fail功能暂未实现");
     }
 }
 
