@@ -27,6 +27,21 @@ public class PaymentController {
 
 
 
+    /**
+     * GET /api/payments/{id}
+     * 查询支付详情
+     * 成员C负责实现
+     *
+     * 响应码: 200 OK / 404 Not Found
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<PaymentResponse> getPaymentDetail(@PathVariable("id") Long id) {
+        PaymentResponse response = paymentService.getPaymentDetail(id);
+        return ResponseEntity.ok(response);
+    }
+
+
+}
 
     /**
      * GET /api/payments?status=CREATED&page=0&size=20

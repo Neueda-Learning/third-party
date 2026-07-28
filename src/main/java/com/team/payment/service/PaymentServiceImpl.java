@@ -10,10 +10,13 @@ import com.team.payment.entity.PaymentHistory;
 import com.team.payment.exception.*;
 import com.team.payment.dao.PaymentDao;
 import com.team.payment.dao.PaymentHistoryDao;
+import com.team.payment.statemachine.PaymentStateMachine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -105,6 +108,28 @@ public class PaymentServiceImpl implements PaymentService {
 			.pageSize(size)
 			.build();
 	}
+    @Override
+    public PaymentResponse getPaymentDetail(Long paymentId) {
+        Payment payment = paymentDao.findById(paymentId);
+        if (payment == null) {
+            throw new PaymentNotFoundException(paymentId);
+        }
+
+        return PaymentResponse.builder()
+                .id(payment.getId())
+                .idempotencyKey(payment.getIdempotencyKey())
+                .sourceAccount(payment.getSourceAccount())
+                .destinationAccount(payment.getDestinationAccount())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .status(payment.getStatus())
+                .errorCode(payment.getErrorCode())
+                .errorMessage(payment.getErrorMessage())
+                .reference(payment.getReference())
+                .createdAt(payment.getCreatedAt())
+                .updatedAt(payment.getUpdatedAt())
+                .build();
+    }
 
 
 }
