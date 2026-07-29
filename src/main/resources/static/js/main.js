@@ -54,13 +54,20 @@ function initPageEvents() {
 }
 
 /**
- * 模块切换
+ * 模块切换（带过渡动画）
  */
 function showModule(moduleName) {
-    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.module').forEach(m => {
+        if (m.classList.contains('active')) {
+            m.classList.remove('active');
+        }
+    });
     const targetModule = document.getElementById(moduleName);
     if (targetModule) {
-        targetModule.classList.add('active');
+        // 短暂延迟让 CSS animation 重新触发
+        requestAnimationFrame(() => {
+            targetModule.classList.add('active');
+        });
     }
 
     document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
@@ -139,6 +146,10 @@ async function handleListPayments() {
     currentPageSize = parseInt(pageSizeSelect);
     currentStatus = statusFilter;
 
+    // 显示 loading 状态
+    const tbody = document.querySelector('#paymentTable tbody');
+    tbody.innerHTML = '<tr><td colspan="8" class="loading"><span class="loading-spinner"></span> 加载中...</td></tr>';
+
     const result = await PaymentAPI.listPayments(currentPage, currentPageSize, statusFilter);
 
     if (result.code === 'SUCCESS') {
@@ -161,18 +172,22 @@ function renderPaymentTable(payments) {
         return;
     }
 
-    payments.forEach(payment => {
+    payments.forEach((payment, index) => {
         const row = document.createElement('tr');
+        row.style.animationDelay = `${index * 40}ms`;
+        row.style.animation = 'fadeSlideIn 0.3s ease both';
         row.innerHTML = `
-            <td>${payment.id}</td>
-            <td>${payment.idempotencyKey}</td>
+            <td><strong>${payment.id}</strong></td>
+            <td style="font-size:0.82em;color:#64748b;">${payment.idempotencyKey}</td>
             <td>${payment.sourceAccount}</td>
             <td>${payment.destinationAccount}</td>
-            <td>${payment.amount}</td>
+            <td><strong>${payment.amount}</strong></td>
             <td><span class="status ${payment.status}">${getStatusLabel(payment.status)}</span></td>
             <td>${formatDateTime(payment.createdAt)}</td>
             <td>
-                <button class="btn btn-outline" onclick="loadPaymentDetail(${payment.id})">详情</button>
+                <button class="btn btn-outline" style="padding:6px 14px;font-size:0.85em;" onclick="loadPaymentDetail(${payment.id})">
+                    <i class="fa-solid fa-eye"></i> 详情
+                </button>
             </td>
         `;
         tbody.appendChild(row);
@@ -191,7 +206,7 @@ function renderPagination(totalPages, currentPage) {
     // 上一页
     if (currentPage > 0) {
         const prevBtn = document.createElement('button');
-        prevBtn.textContent = '上一页';
+        prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i> 上一页';
         prevBtn.onclick = () => {
             currentPage--;
             handleListPayments();
@@ -216,7 +231,7 @@ function renderPagination(totalPages, currentPage) {
     // 下一页
     if (currentPage < totalPages - 1) {
         const nextBtn = document.createElement('button');
-        nextBtn.textContent = '下一页';
+        nextBtn.innerHTML = '下一页 <i class="fa-solid fa-chevron-right"></i>';
         nextBtn.onclick = () => {
             currentPage++;
             handleListPayments();
@@ -366,33 +381,34 @@ function renderOperationButtons(payment) {
     // 根据当前状态显示可用的操作按钮
     if (payment.status === 'CREATED') {
         buttons.push({
-            label: 'CREATED → VALIDATED',
+            label: '<i class="fa-solid fa-circle-check"></i> CREATED → VALIDATED',
             action: () => updatePaymentStatus(payment.id, 'validatePayment')
         });
     }
 
     if (payment.status === 'VALIDATED') {
         buttons.push({
-            label: 'VALIDATED → SENT',
+            label: '<i class="fa-solid fa-paper-plane"></i> VALIDATED → SENT',
             action: () => updatePaymentStatus(payment.id, 'sendPayment')
         });
     }
 
     if (payment.status === 'SENT') {
         buttons.push({
-            label: 'SENT → COMPLETED',
+            label: '<i class="fa-solid fa-flag-checkered"></i> SENT → COMPLETED',
             action: () => updatePaymentStatus(payment.id, 'completePayment')
         });
         buttons.push({
-            label: 'SENT → FAILED',
-            action: () => updatePaymentStatus(payment.id, 'failPayment')
+            label: '<i class="fa-solid fa-triangle-exclamation"></i> SENT → FAILED',
+            action: () => updatePaymentStatus(payment.id, 'failPayment'),
+            className: 'btn-danger'
         });
     }
 
     // 如果还不是终态，允许直接标记为失败
     if (payment.status !== 'COMPLETED' && payment.status !== 'FAILED') {
         buttons.push({
-            label: '标记为失败',
+            label: '<i class="fa-solid fa-ban"></i> 标记为失败',
             action: () => updatePaymentStatus(payment.id, 'failPayment'),
             className: 'btn-danger'
         });
@@ -400,14 +416,15 @@ function renderOperationButtons(payment) {
 
     // 刷新按钮
     buttons.push({
-        label: '刷新',
-        action: () => loadPaymentDetail(payment.id)
+        label: '<i class="fa-solid fa-rotate"></i> 刷新',
+        action: () => loadPaymentDetail(payment.id),
+        className: 'btn-secondary'
     });
 
     buttons.forEach(btn => {
         const button = document.createElement('button');
         button.className = `btn ${btn.className || 'btn-primary'} operation-btn`;
-        button.textContent = btn.label;
+        button.innerHTML = btn.label;
         button.onclick = btn.action;
         operationButtons.appendChild(button);
     });
@@ -441,10 +458,10 @@ async function updatePaymentStatus(paymentId, action) {
     }
 
     if (result.code === 'SUCCESS') {
-        showAlert('detailContent', '✓ 状态更新成功', 'success');
+        showAlert('detailContent', '状态更新成功', 'success');
         await loadPaymentDetail(paymentId);
     } else {
-        showAlert('detailContent', `✗ 更新失败: ${result.data.message}`, 'error');
+        showAlert('detailContent', `更新失败: ${result.data.message}`, 'error');
     }
 }
 
@@ -453,12 +470,14 @@ async function updatePaymentStatus(paymentId, action) {
  */
 function showResult(elementId, message, type) {
     const resultDiv = document.getElementById(elementId);
-    resultDiv.textContent = message;
+    const iconMap = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+    const icon = iconMap[type] || 'fa-circle-info';
+    resultDiv.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
     resultDiv.className = `result show ${type}`;
 
     setTimeout(() => {
         resultDiv.classList.remove('show');
-    }, 3000);
+    }, 4000);
 }
 
 /**
@@ -469,11 +488,15 @@ function showAlert(elementId, message, type) {
     if (container) {
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
-        alert.textContent = message;
+        const iconMap = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+        const icon = iconMap[type] || 'fa-circle-info';
+        alert.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
         container.insertBefore(alert, container.firstChild);
 
         setTimeout(() => {
-            alert.remove();
+            alert.style.transition = 'opacity 0.4s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 400);
         }, 5000);
     }
 }
