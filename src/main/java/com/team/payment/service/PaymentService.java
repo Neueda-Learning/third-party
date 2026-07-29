@@ -4,6 +4,8 @@ import com.team.payment.dto.CreatePaymentRequest;
 import com.team.payment.dto.HistoryResponse;
 import com.team.payment.dto.PaymentListResponse;
 import com.team.payment.dto.PaymentResponse;
+import com.team.payment.entity.Payment;
+import com.team.payment.entity.PaymentHistory;
 
 import java.util.List;
 
@@ -17,6 +19,10 @@ public interface PaymentService {
      */
     PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey);
 
+    /**
+     * 手动推进支付状态为VALIDATED（演示用）
+     */
+    PaymentResponse validatePayment(Long paymentId);
     /**
      * 根据ID查询支付详情
      */
@@ -33,6 +39,9 @@ public interface PaymentService {
     List<HistoryResponse> getPaymentHistory(Long paymentId);
 
 
+    PaymentResponse sendPayment(Long paymentId);
 
+    PaymentResponse completePayment(Long paymentId);
+
+    PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage);
 }
-
