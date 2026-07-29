@@ -10,9 +10,6 @@ import com.team.payment.entity.PaymentStatus;
 import com.team.payment.entity.Payment;
 import com.team.payment.entity.PaymentHistory;
 import com.team.payment.exception.*;
-import com.team.payment.dao.PaymentDao;
-import com.team.payment.dao.PaymentHistoryDao;
-import com.team.payment.entity.PaymentStatus;
 import com.team.payment.exception.PaymentException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -121,10 +118,8 @@ public class PaymentServiceImpl implements PaymentService {
 			.build();
 	}
 
-    @Override
-    public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
-        return null;
-    }
+
+
 
     @Override
     public PaymentResponse getPaymentDetail(Long paymentId) {
@@ -160,11 +155,9 @@ public class PaymentServiceImpl implements PaymentService {
             .map(Currency::getCurrencyCode)
             .collect(Collectors.toUnmodifiableSet());
 
-    @Autowired
-    private PaymentDao paymentDao;
 
-    @Autowired
-    private PaymentHistoryDao paymentHistoryDao;
+
+
 
     @Value("${payment.failure-ratio.create:0.0}")
     private double createFailureRatio;

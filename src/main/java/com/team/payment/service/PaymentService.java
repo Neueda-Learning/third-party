@@ -39,5 +39,9 @@ public interface PaymentService {
     List<HistoryResponse> getPaymentHistory(Long paymentId);
 
 
+    PaymentResponse sendPayment(Long paymentId);
 
+    PaymentResponse completePayment(Long paymentId);
+
+    PaymentResponse failPayment(Long paymentId, String errorCode, String errorMessage);
 }
