@@ -53,6 +53,7 @@ public class PaymentDao {
      */
     @Transactional
     public Payment create(Payment payment) {
+        System.out.println("Creating payment in DAO: " + payment);
         String sql = "INSERT INTO payments (idempotency_key, source_account, destination_account, " +
                      "amount, currency, status, reference, version, created_at, updated_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
