@@ -3,7 +3,7 @@
 *.iws
 *.iml
 *.ipr
-
+src/resources
 # Maven build output
 target/
 
