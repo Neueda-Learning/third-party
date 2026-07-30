@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: payment-system
+  
+  # 开发环境数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/payment_db_dev?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: n3u3da!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+server:
+  port: 8080
+
+# 开发环境日志配置
+logging:
+  level:
+    root: INFO
+    com.team.payment: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.jdbc.core: DEBUG
+
+# 开发环境支付系统配置
+payment:
+  scheduler:
+    enabled: true
+    timeout-minutes: 15
+    execution-interval-seconds: 60
+    failure-rate: 0.1
+
