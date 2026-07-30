@@ -43,14 +43,23 @@ public class PaymentController {
             @Valid @RequestBody CreatePaymentRequest request,@RequestHeader("Idempotency-Key")  String idempotencyKey) {
         PaymentResponse response = paymentService.createPayment(request, idempotencyKey);
         log.info("Create payment finished with status={}", response.getStatus());
-        if (response.getStatus().equals("CREATED")) {
+        if ("CREATED".equals(response.getStatus())) {
             log.info("Payment created successfully");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else {
-            log.warn("Payment creation failed. errorCode={}, errorMessage={}", response.getErrorCode(), response.getErrorMessage());
-            return ResponseEntity.ok(response);
-
         }
+
+        if ("DUPLICATE_IDEMPOTENCY_KEY".equals(response.getErrorCode())) {
+            log.warn("Duplicate idempotency key. errorMessage={}", response.getErrorMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        if ("FAILED".equals(response.getStatus())) {
+            log.warn("Payment validation failed. errorCode={}, errorMessage={}", response.getErrorCode(), response.getErrorMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Backward-compatible fallback for idempotent replay of an existing payment snapshot.
+        return ResponseEntity.ok(response);
     }
 
     /**
