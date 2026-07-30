@@ -1,6 +1,6 @@
 // 后端服务地址 —— 前后端分离后需要指向后端实际地址
 // 开发时默认 http://localhost:8080，生产部署时改为对应域名
-const BACKEND_BASE = "http://localhost:8080";
+const BACKEND_BASE = "";
 
 const API_BASE_URL = `${BACKEND_BASE}/api/payments`;
 const ACCOUNT_BASE_URL = `${BACKEND_BASE}/api/accounts`;
