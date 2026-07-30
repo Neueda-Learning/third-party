@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UltimateRestHistory">
+    <items>
+      <historyItem>
+        <option name="timestamp" value="1785393950940" />
+        <request url="http://localhost:8080/api/accounts/by-username/test?username=alice">
+          <params>
+            <param name="username" value="alice" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390576212" />
+        <request url="http://localhost:8080/api/accounts/by-username/test?username=alice">
+          <params>
+            <param name="username" value="alice" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390569588" />
+        <request url="http://localhost:8080/api/accounts/1?id=1">
+          <params>
+            <param name="id" value="1" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390549958" />
+        <request url="http://localhost:8080/api/accounts/by-username/test?username=alice">
+          <params>
+            <param name="username" value="alice" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390450383" />
+        <request url="http://localhost:8080/api/accounts/by-username/test?username=alice">
+          <params>
+            <param name="username" value="alice" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390330157" />
+        <request url="http://localhost:8080/api/accounts/by-username/test?username=alice">
+          <params>
+            <param name="username" value="alice" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390295136" />
+        <request url="http://localhost:8080/api/accounts/1?id=1">
+          <params>
+            <param name="id" value="1" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785390241718" />
+        <request url="http://localhost:8080/api/accounts/1?id">
+          <params>
+            <param name="id" value="" type="QUERY" dataType="String" />
+          </params>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785206718112" />
+        <request url="http://localhost:8080/api/payments/1/history" />
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785206586113" />
+        <request url="http://localhost:8080/api/payments/1/history" />
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1785206361545" />
+        <request url="http://localhost:8080/api/payments/1/history" />
+      </historyItem>
+    </items>
+  </component>
+</project>

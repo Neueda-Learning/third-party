@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="75e84117-d347-4094-8192-942a5d9cb64d" name="Changes" comment="﻿Merge branch 'test' of https://github.com/Neueda-Learning/third-party&#10;# Please enter a commit message to explain why this merge is necessary,&#10;# especially if it merges an updated upstream into a topic branch.&#10;#&#10;# Lines starting with '#' will be ignored, and an empty message aborts&#10;# the commit.">
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/ultimate-rest-api-cache.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/ultimate-rest-envs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/ultimate-rest-history.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/config/CorsConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/controller/HomeController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/js/api.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/js/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ARCHITECTURE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/START.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/START.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/Payment Processing System.pptx" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/Payment Processing System.pptx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/design_final.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/design_final.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/design_proposal.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/design_proposal.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/dev_design.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/dev_design.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/payment_mvp_implementation_zh.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/payment_mvp_implementation_zh.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/payment_processing.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/payment_processing.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/payment_processing_zh.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/payment_processing_zh.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/payment_processing_设计文档_zh.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/payment_processing_设计文档_zh.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/presentation.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/presentation.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/presentations.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/documents/presentations.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/PaymentApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/PaymentApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/controller/AccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/controller/AccountController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/controller/HomeController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/controller/PaymentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/controller/PaymentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dao/AccountDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dao/AccountDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dao/PaymentDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dao/PaymentDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dao/PaymentHistoryDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dao/PaymentHistoryDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/AccountResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/AccountResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/CreateAccountRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/CreateAccountRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/CreatePaymentRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/CreatePaymentRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/DepositRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/DepositRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/ErrorResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/ErrorResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/HistoryResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/HistoryResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/PaymentListResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/PaymentListResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/dto/PaymentResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/dto/PaymentResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/entity/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/entity/Account.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/entity/Payment.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/entity/Payment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/entity/PaymentHistory.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/entity/PaymentHistory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/entity/PaymentStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/entity/PaymentStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/exception/InvalidStatusTransitionException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/exception/InvalidStatusTransitionException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/exception/PaymentException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/exception/PaymentException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/exception/PaymentNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/exception/PaymentNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/exception/ValidationException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/exception/ValidationException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/service/AccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/service/AccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/service/AccountServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/service/PaymentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/service/PaymentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/team/payment/service/PaymentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/payment/service/PaymentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-dev.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-prod.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/schema.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/js/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/js/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/team/payment/controller/PaymentControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/team/payment/controller/PaymentControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/team/payment/service/PaymentServiceImplListPaymentsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/team/payment/service/PaymentServiceImplListPaymentsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/team/payment/service/PaymentServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/team/payment/service/PaymentServiceImplTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/Administrator/Desktop/tt/third-party" value="3H4mrsEXuO6S4elpfLMTyaZ63E2" />
+    </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedChatMode">
+    <option name="chatModeId" value="Agent" />
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="agent-panel" value="Claude Sonnet 4.6" />
+      <entry key="chat-panel" value="Claude Sonnet 4.6" />
+    </selectedModels>
+  </component>
+  <component name="DBNavigator.Project.Workspace.Settings">
+    <assistant-settings>
+      <credential-settings>
+        <credentials />
+      </credential-settings>
+      <profile-settings>
+        <profiles />
+      </profile-settings>
+      <mcp-server-settings>
+        <workspace-integration value="false" />
+        <mcp-servers />
+        <mcp-tool-approvals />
+      </mcp-server-settings>
+    </assistant-settings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;shuanchen696&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Neueda-Learning/third-party.git&quot;,
+    &quot;accountId&quot;: &quot;199a576e-0fe8-44a5-8b4c-dad103ca7f41&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-jdbc/6.1.1/spring-jdbc-6.1.1.jar!/org/springframework/jdbc/core/JdbcTemplate.class" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="localRepository" value="C:\Users\Administrator\.m2\repository" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="3H4mrsEXuO6S4elpfLMTyaZ63E2" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.PaymentApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PaymentControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PaymentServiceImplListPaymentsTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PaymentServiceImplTest.getPaymentHistoryReturnsMappedHistoryInOrder.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-system [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-system [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-system [org.apache.maven.plugins:maven-clean-plugin:3.2.0:clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-system [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-system [validate].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev/history&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Administrator/Desktop/tt/third-party&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.appearance&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\tt\third-party\documents" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\tt\third-party\documents" />
+      <recent name="C:\Users\Administrator\Desktop\tt\third-party\src\main\resources\templates\js" />
+      <recent name="C:\Users\Administrator\Desktop\tt\third-party\src\main\resources\templates" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.PaymentControllerTest">
+    <configuration name="PaymentApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.team.payment.PaymentApplication" />
+      <module name="payment-system" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.payment.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PaymentControllerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="payment-system" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.payment.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.team.payment.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.team.payment.controller.PaymentControllerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PaymentServiceImplListPaymentsTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="payment-system" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.payment.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.team.payment.service" />
+      <option name="MAIN_CLASS_NAME" value="com.team.payment.service.PaymentServiceImplListPaymentsTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PaymentServiceImplTest.getPaymentHistoryReturnsMappedHistoryInOrder" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="payment-system" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.payment.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.team.payment.service" />
+      <option name="MAIN_CLASS_NAME" value="com.team.payment.service.PaymentServiceImplTest" />
+      <option name="METHOD_NAME" value="getPaymentHistoryReturnsMappedHistoryInOrder" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.PaymentControllerTest" />
+        <item itemvalue="Application.PaymentApplication" />
+        <item itemvalue="JUnit.PaymentServiceImplListPaymentsTest" />
+        <item itemvalue="JUnit.PaymentServiceImplTest.getPaymentHistoryReturnsMappedHistoryInOrder" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="75e84117-d347-4094-8192-942a5d9cb64d" name="Changes" comment="" />
+      <created>1785135916949</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1785135916949</updated>
+    </task>
+    <task id="LOCAL-00001" summary="files: accomplish the get of the payment history">
+      <option name="closed" value="true" />
+      <created>1785220411726</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1785220411726</updated>
+    </task>
+    <task id="LOCAL-00002" summary="files: accomplish the get of the payment history together">
+      <option name="closed" value="true" />
+      <created>1785220817643</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1785220817643</updated>
+    </task>
+    <task id="LOCAL-00003" summary="files: accomplish the get of the payment history together">
+      <option name="closed" value="true" />
+      <created>1785224740840</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1785224740840</updated>
+    </task>
+    <task id="LOCAL-00004" summary="testfiles: fix the tests of controller and service and handle the merging issues">
+      <option name="closed" value="true" />
+      <created>1785378394753</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1785378394753</updated>
+    </task>
+    <task id="LOCAL-00005" summary="files: adjust the front and backend">
+      <option name="closed" value="true" />
+      <created>1785397335088</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1785397335088</updated>
+    </task>
+    <task id="LOCAL-00006" summary="﻿Merge branch 'test' of https://github.com/Neueda-Learning/third-party&#10;# Please enter a commit message to explain why this merge is necessary,&#10;# especially if it merges an updated upstream into a topic branch.&#10;#&#10;# Lines starting with '#' will be ignored, and an empty message aborts&#10;# the commit.">
+      <option name="closed" value="true" />
+      <created>1785399065088</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1785399065088</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="User">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="*" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="files: accomplish the get of the payment history" />
+    <MESSAGE value="files: accomplish the get of the payment history together" />
+    <MESSAGE value="testfiles: fix the tests of controller and service and handle the merging issues" />
+    <MESSAGE value="files: adjust the front and backend" />
+    <option name="LAST_COMMIT_MESSAGE" value="files: adjust the front and backend" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
