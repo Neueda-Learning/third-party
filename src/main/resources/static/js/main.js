@@ -1,5 +1,6 @@
 const state = {
     activeTab: "create",
+    activeSubTab: "acc-create",
     page: 0,
     pageSize: 20,
     status: "",
@@ -96,8 +97,7 @@ const i18n = {
         "flow.failed": "失败",
         "flow.current": "当前状态",
         "flow.currentEn": "Current Status",
-        "flow.currentZh": "当前状态"
-        "flow.current": "当前状态",
+        "flow.currentZh": "当前状态",
         "tab.account": "账户管理",
         "account.title": "账户管理",
         "account.desc": "创建账户、查询账户信息、为账户充值。",
@@ -108,7 +108,7 @@ const i18n = {
         "account.field.currency": "币种",
         "account.field.initialBalance": "初始余额",
         "account.field.accountId": "账户 ID",
-        "account.query.title": "查询账户",
+        "account.field.depositAmount": "充值金额",
         "account.query.desc": "填写 ID 或账户名查询单个账户，两者均不填则查询全部。",
         "account.query.byId": "账户 ID",
         "account.query.byAccountName": "账户名",
@@ -225,8 +225,7 @@ const i18n = {
         "flow.failed": "Failed",
         "flow.current": "Current",
         "flow.currentEn": "Current Status",
-        "flow.currentZh": "Current Status"
-        "flow.current": "Current",
+        "flow.currentZh": "Current Status",
         "tab.account": "Accounts",
         "account.title": "Account Management",
         "account.desc": "Create accounts, query account info, and deposit funds.",
@@ -293,10 +292,15 @@ function bindEvents() {
         button.addEventListener("click", () => showTab(button.dataset.tab));
     });
 
+    document.querySelectorAll("[data-subtab]").forEach((button) => {
+        button.addEventListener("click", () => showSubTab(button.dataset.subtab));
+    });
+
     document.getElementById("createForm").addEventListener("submit", handleCreatePayment);
     document.getElementById("createForm").addEventListener("reset", () => {
         window.setTimeout(generateIdempotencyKey, 0);
         hideFeedback();
+        clearCurrencyBadges();
     });
     document.getElementById("generateKeyBtn").addEventListener("click", generateIdempotencyKey);
     document.getElementById("fillDemoBtn").addEventListener("click", fillDemoData);
@@ -324,9 +328,15 @@ function bindEvents() {
     });
 
     // 账户管理事件
-    // 账户管理事件
     document.getElementById("createAccountForm").addEventListener("submit", handleCreateAccount);
-    document.getElementById("queryAccountBtn").addEventListener("click", handleQueryAccount);
+    document.getElementById("queryAccountForm").addEventListener("submit", (e) => { e.preventDefault(); handleQueryAccount(); });
+    document.getElementById("queryAccountForm").addEventListener("reset", () => {
+        hideAccountList();
+        const detailEl = document.getElementById("accountDetailContent");
+        detailEl.className = "detail-grid detail-grid--empty";
+        detailEl.style.display = "";
+        detailEl.textContent = t("account.empty");
+    });
     document.getElementById("queryAccountId").addEventListener("keydown", (e) => {
         if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
     });
@@ -338,6 +348,11 @@ function bindEvents() {
     ["sourceAccount", "destinationAccount", "amount"].forEach((id) => {
         document.getElementById(id).addEventListener("input", updateCreateHint);
     });
+
+    document.getElementById("sourceAccount").addEventListener("blur", () =>
+        fetchAndShowCurrencyBadge("sourceAccount", "sourceCurrencyBadge"));
+    document.getElementById("destinationAccount").addEventListener("blur", () =>
+        fetchAndShowCurrencyBadge("destinationAccount", "destinationCurrencyBadge"));
 }
 
 function showTab(tabName) {
@@ -352,6 +367,9 @@ function showTab(tabName) {
     if (tabName === "list") {
         loadPayments();
     }
+    if (tabName === "account") {
+        showSubTab(state.activeSubTab || "acc-create");
+    }
 }
 
 function generateIdempotencyKey() {
@@ -362,6 +380,16 @@ function generateIdempotencyKey() {
 
 function toggleLocale() {
     setLocale(state.locale === "zh" ? "en" : "zh");
+}
+
+function showSubTab(subTabName) {
+    state.activeSubTab = subTabName;
+    document.querySelectorAll("[data-subpanel]").forEach((panel) => {
+        panel.style.display = panel.id === subTabName + "-panel" ? "" : "none";
+    });
+    document.querySelectorAll("[data-subtab]").forEach((btn) => {
+        btn.classList.toggle("is-active", btn.dataset.subtab === subTabName);
+    });
 }
 
 function setLocale(locale) {
@@ -416,6 +444,31 @@ function t(key, vars = {}) {
     return Object.keys(vars).reduce((acc, name) => acc.replace(`{${name}}`, String(vars[name])), text);
 }
 
+function clearCurrencyBadges() {
+    ["sourceCurrencyBadge", "destinationCurrencyBadge"].forEach((id) => {
+        const badge = document.getElementById(id);
+        if (badge) { badge.hidden = true; badge.textContent = ""; }
+    });
+}
+
+async function fetchAndShowCurrencyBadge(inputId, badgeId) {
+    const accountName = document.getElementById(inputId).value.trim();
+    const badge = document.getElementById(badgeId);
+    if (!accountName) {
+        badge.hidden = true;
+        badge.textContent = "";
+        return;
+    }
+    const result = await AccountAPI.getAccountByAccountName(accountName);
+    if (result.ok && result.data && result.data.currency) {
+        badge.textContent = result.data.currency;
+        badge.hidden = false;
+    } else {
+        badge.hidden = true;
+        badge.textContent = "";
+    }
+}
+
 function fillDemoData() {
     document.getElementById("sourceAccount").value = `ACC${Math.floor(Math.random() * 900 + 100)}`;
     document.getElementById("destinationAccount").value = `ACC${Math.floor(Math.random() * 900 + 100)}`;
@@ -447,13 +500,14 @@ async function handleCreatePayment(event) {
     if (result.ok) {
         const isCreated = result.status === 201;
         const message = isCreated ? t("msg.createOk", { id: result.data.id }) : t("msg.createDup", { id: result.data.id });
-        showFeedback(message, "success");
-        showToast(message, "success");
 
         state.selectedPaymentId = result.data.id;
         document.getElementById("createForm").reset();
         generateIdempotencyKey();
         updateCreateHint();
+
+        showFeedback(message, "success");
+        showToast(message, "success");
     } else {
         const message = `${result.error.errorCode}: ${result.error.message}`;
         showFeedback(message, "error");

@@ -532,6 +532,17 @@ public class PaymentServiceImpl implements PaymentService {
             );
         }
 
+        // 校验源账户名在数据库中是否存在
+        Account srcAccount = accountDao.findByAccountName(normalizedSource);
+        if (srcAccount == null) {
+            return new PaymentException("ACCOUNT_NOT_FOUND", "源账户不存在: " + normalizedSource);
+        }
+        // 校验目标账户名在数据库中是否存在
+        Account dstAccount = accountDao.findByAccountName(normalizedDestination);
+        if (dstAccount == null) {
+            return new PaymentException("ACCOUNT_NOT_FOUND", "目标账户不存在: " + normalizedDestination);
+        }
+
         Payment existingPayment = paymentDao.findByIdempotencyKey(normalizedIdempotencyKey);
         if (existingPayment != null) {
             return new PaymentException("DUPLICATE_IDEMPOTENCY_KEY", "Idempotency key already exists: " + normalizedIdempotencyKey);

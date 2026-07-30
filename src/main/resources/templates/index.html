@@ -40,11 +40,17 @@
                 <form id="createForm" class="form-grid" novalidate>
                     <label class="field">
                         <span data-i18n="field.source">付款账户</span>
-                        <input id="sourceAccount" name="sourceAccount" type="text" placeholder="例如 ACC001" data-i18n-placeholder="ph.source" maxlength="50" required>
+                        <div class="input-badge-wrap">
+                            <input id="sourceAccount" name="sourceAccount" type="text" placeholder="例如 ACC001" data-i18n-placeholder="ph.source" maxlength="50" required>
+                            <span class="currency-badge" id="sourceCurrencyBadge" hidden></span>
+                        </div>
                     </label>
                     <label class="field">
                         <span data-i18n="field.destination">收款账户</span>
-                        <input id="destinationAccount" name="destinationAccount" type="text" placeholder="例如 ACC002" data-i18n-placeholder="ph.destination" maxlength="50" required>
+                        <div class="input-badge-wrap">
+                            <input id="destinationAccount" name="destinationAccount" type="text" placeholder="例如 ACC002" data-i18n-placeholder="ph.destination" maxlength="50" required>
+                            <span class="currency-badge" id="destinationCurrencyBadge" hidden></span>
+                        </div>
                     </label>
                     <label class="field">
                         <span data-i18n="field.amount">金额（CNY）</span>
@@ -160,9 +166,15 @@
                     <p data-i18n="account.desc">创建账户、查询账户信息、为账户充值。</p>
                 </div>
 
+                <!-- 子导航 Tab 栏 -->
+                <nav class="sub-tabs" aria-label="account-subtabs">
+                    <button class="sub-tab-btn is-active" data-subtab="acc-create" type="button" data-i18n="account.create.title">创建账户</button>
+                    <button class="sub-tab-btn" data-subtab="acc-query" type="button" data-i18n="account.query.title">查询账户</button>
+                    <button class="sub-tab-btn" data-subtab="acc-deposit" type="button" data-i18n="account.deposit.title">账户充值</button>
+                </nav>
+
                 <!-- 创建账户 -->
-                <div class="sub-card">
-                    <h3 data-i18n="account.create.title">创建账户</h3>
+                <div class="sub-card" id="acc-create-panel" data-subpanel>
                     <form id="createAccountForm" class="form-grid" novalidate>
                         <label class="field">
                             <span data-i18n="account.field.accountName">账户名</span>
@@ -170,7 +182,11 @@
                         </label>
                         <label class="field">
                             <span data-i18n="account.field.currency">币种</span>
-                            <input id="accCurrency" name="currency" type="text" placeholder="CNY" data-i18n-placeholder="ph.accCurrency" maxlength="8" required>
+                            <select id="accCurrency" name="currency" required>
+                                <option value="CNY" selected>CNY</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
                         </label>
                         <label class="field field--full">
                             <span data-i18n="account.field.initialBalance">初始余额</span>
@@ -185,27 +201,28 @@
                 </div>
 
                 <!-- 查询账户 -->
-                <div class="sub-card">
-                    <h3 data-i18n="account.query.title">查询账户</h3>
+                <div class="sub-card" id="acc-query-panel" data-subpanel style="display:none">
                     <p style="margin-bottom:0.75rem;color:#666;font-size:0.875rem" data-i18n="account.query.desc">填写 ID 或账户名查询单个账户，两者均不填则查询全部。</p>
-                    <div class="toolbar">
-                        <label>
+                    <form id="queryAccountForm" class="form-grid" novalidate>
+                        <label class="field">
                             <span data-i18n="account.query.byId">账户 ID</span>
-                            <input type="number" id="queryAccountId" min="1" placeholder="输入账户 ID" data-i18n-placeholder="ph.accId">
+                            <input type="number" id="queryAccountId" name="accountId" min="1" placeholder="输入账户 ID" data-i18n-placeholder="ph.accId">
                         </label>
-                        <label>
+                        <label class="field">
                             <span data-i18n="account.query.byAccountName">账户名</span>
-                            <input type="text" id="queryAccountAccountName" placeholder="输入账户名" data-i18n-placeholder="ph.accAccountName" maxlength="64">
+                            <input type="text" id="queryAccountAccountName" name="accountName" placeholder="输入账户名" data-i18n-placeholder="ph.accAccountName" maxlength="64">
                         </label>
-                        <button class="btn btn--primary" id="queryAccountBtn" type="button" data-i18n="account.btn.query">查询</button>
-                    </div>
+                        <div class="actions field--full">
+                            <button class="btn btn--primary" id="queryAccountBtn" type="submit" data-i18n="account.btn.query">查询</button>
+                            <button class="btn btn--ghost" id="resetQueryAccountBtn" type="reset" data-i18n="btn.reset">重置</button>
+                        </div>
+                    </form>
                     <div id="accountListContent" style="margin-top:1rem;display:none;"></div>
                     <div id="accountDetailContent" class="detail-grid detail-grid--empty" style="margin-top:1rem" data-empty-text>尚未查询任何账户</div>
                 </div>
 
                 <!-- 充值 -->
-                <div class="sub-card">
-                    <h3 data-i18n="account.deposit.title">账户充值</h3>
+                <div class="sub-card" id="acc-deposit-panel" data-subpanel style="display:none">
                     <form id="depositForm" class="form-grid" novalidate>
                         <label class="field">
                             <span data-i18n="account.field.accountId">账户 ID</span>
