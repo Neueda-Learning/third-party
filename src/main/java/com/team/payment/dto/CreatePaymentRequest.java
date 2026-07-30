@@ -13,26 +13,24 @@ import java.math.BigDecimal;
 @Builder
 public class CreatePaymentRequest {
 
-    /** 付款账户ID */
-    @NotNull(message = "fromAccountId 不能为null")
-    private Long fromAccountId;
-
-    /** 收款账户ID */
-    @NotNull(message = "toAccountId 不能为null")
-    private Long toAccountId;
-
-    /** 汇率（跨币种时必填，同币种可不传） */
-    private BigDecimal exchangeRate;
-
-    /** 付款账户名（冗余字段，用于显示） */
+    /** 付款账户名 */
     @NotBlank(message = "sourceAccount 不能为空")
     @Size(min = 1, max = 50, message = "sourceAccount 长度应为1-50")
     private String sourceAccount;
 
-    /** 收款账户名（冗余字段，用于显示） */
+    /** 付款账户ID（可选，不传时系统按账户名自动查询） */
+    private Long sourceAccountId;
+
+    /** 收款账户名 */
     @NotBlank(message = "destinationAccount 不能为空")
     @Size(min = 1, max = 50, message = "destinationAccount 长度应为1-50")
     private String destinationAccount;
+
+    /** 收款账户ID（可选，不传时系统按账户名自动查询） */
+    private Long destinationAccountId;
+
+    /** 汇率（跨币种时必填，同币种可不传） */
+    private BigDecimal exchangeRate;
 
     /** 金额 */
     @NotNull(message = "amount 不能为null")

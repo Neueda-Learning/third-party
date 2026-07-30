@@ -224,12 +224,25 @@ public class PaymentServiceImpl implements PaymentService {
 
     private Payment persistCreatedPayment(CreatePaymentRequest request, String idempotencyKey) {
         LocalDateTime now = LocalDateTime.now();
+
+        // 若前端未传 sourceAccountId / destinationAccountId，则按账户名自动查询补全
+        Long sourceAccountId = request.getSourceAccountId();
+        Long destinationAccountId = request.getDestinationAccountId();
+        if (sourceAccountId == null) {
+            Account src = accountDao.findByAccountName(request.getSourceAccount().trim());
+            if (src != null) sourceAccountId = src.getId();
+        }
+        if (destinationAccountId == null) {
+            Account dst = accountDao.findByAccountName(request.getDestinationAccount().trim());
+            if (dst != null) destinationAccountId = dst.getId();
+        }
+
         Payment created = paymentDao.create(Payment.builder()
                 .idempotencyKey(idempotencyKey)
                 .sourceAccount(request.getSourceAccount().trim())
                 .destinationAccount(request.getDestinationAccount().trim())
-                .fromAccountId(request.getFromAccountId())
-                .toAccountId(request.getToAccountId())
+                .fromAccountId(sourceAccountId)
+                .toAccountId(destinationAccountId)
                 .exchangeRate(request.getExchangeRate())
                 .amount(request.getAmount())
                 .currency(normalizeCurrency(request.getCurrency()))

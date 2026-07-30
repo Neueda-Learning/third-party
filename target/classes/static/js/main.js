@@ -25,6 +25,7 @@ const i18n = {
         "field.destination": "收款账户",
         "field.amount": "金额（CNY）",
         "field.reference": "参考号 / 备注",
+        "field.exchangeRate": "汇率（跨币种时必填）",
         "field.idempotency": "幂等键",
         "btn.regenerate": "重新生成",
         "btn.create": "创建支付",
@@ -64,6 +65,7 @@ const i18n = {
         "ph.destination": "例如 ACC002",
         "ph.amount": "1500.50",
         "ph.reference": "例如 INV-20260727",
+        "ph.exchangeRate": "例如 7.25",
         "ph.detailId": "输入支付ID，例如 1",
         "msg.requireFields": "请填写付款账户、收款账户和金额",
         "msg.accountSame": "付款账户和收款账户不能相同",
@@ -147,6 +149,7 @@ const i18n = {
         "field.destination": "Destination Account",
         "field.amount": "Amount (CNY)",
         "field.reference": "Reference / Note",
+        "field.exchangeRate": "Exchange Rate (required for cross-currency)",
         "field.idempotency": "Idempotency Key",
         "btn.regenerate": "Regenerate",
         "btn.create": "Create Payment",
@@ -186,6 +189,7 @@ const i18n = {
         "ph.destination": "e.g. ACC002",
         "ph.amount": "1500.50",
         "ph.reference": "e.g. INV-20260727",
+        "ph.exchangeRate": "e.g. 7.25",
         "ph.detailId": "Enter payment ID, e.g. 1",
         "msg.requireFields": "Please fill source account, destination account and amount",
         "msg.accountSame": "Source and destination accounts cannot be the same",
@@ -425,11 +429,14 @@ async function handleCreatePayment(event) {
 }
 
 function collectCreatePayload() {
+    const exchangeRateRaw = document.getElementById("exchangeRate").value;
+    const exchangeRate = exchangeRateRaw ? Number(exchangeRateRaw) : undefined;
     return {
         sourceAccount: document.getElementById("sourceAccount").value.trim(),
         destinationAccount: document.getElementById("destinationAccount").value.trim(),
         amount: Number(document.getElementById("amount").value),
         currency: "CNY",
+        exchangeRate,
         reference: document.getElementById("reference").value.trim() || undefined
     };
 }
