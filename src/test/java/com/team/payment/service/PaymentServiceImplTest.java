@@ -229,31 +229,32 @@ class PaymentServiceImplTest {
         verify(paymentDao, times(1)).create(any());
         verify(paymentHistoryDao, times(4)).insert(any());
 
-        private void mockAutoLifecycle (String currency){
-            Payment created = Payment.builder().id(1L).status("CREATED").currency(currency).build();
-            Payment validated = Payment.builder().id(1L).status("VALIDATED").currency(currency).build();
-            Payment sent = Payment.builder().id(1L).status("SENT").currency(currency).build();
-            Payment completed = Payment.builder().id(1L).status("COMPLETED").currency(currency).build();
+    }
 
-            org.mockito.Mockito.when(paymentDao.findByIdempotencyKey(any())).thenReturn(null);
-            org.mockito.Mockito.when(paymentDao.create(any())).thenReturn(created);
-            org.mockito.Mockito.when(paymentDao.findById(1L)).thenReturn(
-                    created,
-                    validated,
-                    validated,
-                    sent,
-                    sent,
-                    completed
-            );
-        }
+    private void mockAutoLifecycle (String currency){
+        Payment created = Payment.builder().id(1L).status("CREATED").currency(currency).build();
+        Payment validated = Payment.builder().id(1L).status("VALIDATED").currency(currency).build();
+        Payment sent = Payment.builder().id(1L).status("SENT").currency(currency).build();
+        Payment completed = Payment.builder().id(1L).status("COMPLETED").currency(currency).build();
 
-        private CreatePaymentRequest.CreatePaymentRequestBuilder validRequestBuilder () {
-            return CreatePaymentRequest.builder()
-                    .sourceAccount("SRCACC001")
-                    .destinationAccount("DSTACC001")
-                    .amount(new BigDecimal("99.99"))
-                    .currency("CNY")
-                    .reference("test");
-        }
+        org.mockito.Mockito.when(paymentDao.findByIdempotencyKey(any())).thenReturn(null);
+        org.mockito.Mockito.when(paymentDao.create(any())).thenReturn(created);
+        org.mockito.Mockito.when(paymentDao.findById(1L)).thenReturn(
+                created,
+                validated,
+                validated,
+                sent,
+                sent,
+                completed
+        );
+    }
+
+    private CreatePaymentRequest.CreatePaymentRequestBuilder validRequestBuilder () {
+        return CreatePaymentRequest.builder()
+                .sourceAccount("SRCACC001")
+                .destinationAccount("DSTACC001")
+                .amount(new BigDecimal("99.99"))
+                .currency("CNY")
+                .reference("test");
     }
 }

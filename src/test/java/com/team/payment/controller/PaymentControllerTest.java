@@ -8,19 +8,13 @@ import com.team.payment.exception.GlobalExceptionHandler;
 import com.team.payment.exception.PaymentNotFoundException;
 import com.team.payment.exception.PaymentException;
 import com.team.payment.service.PaymentService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,7 +30,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
 @WebMvcTest(PaymentController.class)
 @Import(GlobalExceptionHandler.class)
 class PaymentControllerTest {
@@ -48,18 +41,11 @@ class PaymentControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    @Mock
     private PaymentService paymentService;
 
-    @InjectMocks
+    @Autowired
     private PaymentController paymentController;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(paymentController)
-            .setControllerAdvice(new GlobalExceptionHandler())
-            .build();
-    }
 
     @Test
     void getPaymentDetail_shouldReturn200_whenPaymentExists() throws Exception {
@@ -181,7 +167,7 @@ class PaymentControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorCode").value("PROCESSING_ERROR"));
     }
-}
+
 
     private CreatePaymentRequest buildValidRequest() {
         return CreatePaymentRequest.builder()
