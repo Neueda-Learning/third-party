@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UltimateRestApiCache">
+    <cachedApis>
+      <api method="POST" url="/api/payments" className="com.team.payment.controller.PaymentController" methodName="createPayment" moduleName="payment-system" description="POST /api/payments 创建支付 成员A负责实现 请求头: Idempotenc...">
+        <params>
+          <param name="body" value="{&#13;&#10;  &quot;fromAccountId&quot; : 0,&#13;&#10;  &quot;toAccountId&quot; : 0,&#13;&#10;  &quot;exchangeRate&quot; : 0.0,&#13;&#10;  &quot;sourceAccount&quot; : &quot;&quot;,&#13;&#10;  &quot;destinationAccount&quot; : &quot;&quot;,&#13;&#10;  &quot;amount&quot; : 0.0,&#13;&#10;  &quot;currency&quot; : &quot;&quot;,&#13;&#10;  &quot;reference&quot; : &quot;&quot;&#13;&#10;}" type="BODY" dataType="CreatePaymentRequest" />
+          <param name="idempotencyKey" value="" type="QUERY" dataType="String" />
+        </params>
+      </api>
+      <api method="GET" url="/api/payments/{id}" className="com.team.payment.controller.PaymentController" methodName="getPaymentDetail" moduleName="payment-system" description="GET /api/payments/ { id } 查询支付详情 成员C负责实现 响应码: 2...">
+        <params>
+          <param name="id" value="1" type="PATH" dataType="Long" />
+        </params>
+      </api>
+      <api method="GET" url="/api/payments" className="com.team.payment.controller.PaymentController" methodName="listPayments" moduleName="payment-system" description="GET /api/payments?status=CREATED&amp;page=0&amp;size=20...">
+        <params>
+          <param name="status" value="" type="QUERY" dataType="String" />
+          <param name="page" value="" type="QUERY" dataType="int" />
+          <param name="size" value="" type="QUERY" dataType="int" />
+        </params>
+      </api>
+      <api method="GET" url="/api/payments/{id}/history" className="com.team.payment.controller.PaymentController" methodName="getPaymentHistory" moduleName="payment-system" description="GET /api/payments/ { id } /history 查询支付历史 成员C负责...">
+        <params>
+          <param name="id" value="1" type="PATH" dataType="Long" />
+        </params>
+      </api>
+      <api method="POST" url="/api/accounts" className="com.team.payment.controller.AccountController" methodName="createAccount" moduleName="payment-system" description="POST /api/accounts 创建账户 响应码: 201 Created">
+        <params>
+          <param name="body" value="{&#13;&#10;  &quot;username&quot; : &quot;&quot;,&#13;&#10;  &quot;currency&quot; : &quot;&quot;,&#13;&#10;  &quot;initialBalance&quot; : 0.0&#13;&#10;}" type="BODY" dataType="CreateAccountRequest" />
+        </params>
+      </api>
+      <api method="GET" url="/api/accounts/{id}" className="com.team.payment.controller.AccountController" methodName="getAccount" moduleName="payment-system" description="GET /api/accounts/ { id } 查询账户详情（包含币种，供创建支付前查询对...">
+        <params>
+          <param name="id" value="1" type="PATH" dataType="Long" />
+        </params>
+      </api>
+      <api method="GET" url="/api/accounts/by-username/{username}" className="com.team.payment.controller.AccountController" methodName="getByUsername" moduleName="payment-system" description="GET /api/accounts/by-username/ { username } 按用户...">
+        <params>
+          <param name="username" value="test" type="PATH" dataType="String" />
+        </params>
+      </api>
+      <api method="POST" url="/api/accounts/{id}/deposit" className="com.team.payment.controller.AccountController" methodName="deposit" moduleName="payment-system" description="POST /api/accounts/ { id } /deposit 充值 响应码: 200 OK">
+        <params>
+          <param name="id" value="1" type="PATH" dataType="Long" />
+          <param name="body" value="{&#13;&#10;  &quot;amount&quot; : 0.0&#13;&#10;}" type="BODY" dataType="DepositRequest" />
+        </params>
+      </api>
+    </cachedApis>
+  </component>
+</project>
