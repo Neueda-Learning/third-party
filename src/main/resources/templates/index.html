@@ -4,162 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>支付处理系统</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-
-    <!-- 顶部导航栏 -->
-    <header class="navbar">
-        <div class="navbar-inner">
-            <div class="navbar-brand">
-                <div class="brand-logo"><i class="fa-solid fa-credit-card"></i></div>
-                <span class="brand-title">支付处理系统</span>
-            </div>
-            <nav class="navbar-nav">
-                <a href="#" class="nav-item active" data-view="create">
-                    <i class="fa-solid fa-plus"></i> 创建支付
-                </a>
-                <a href="#" class="nav-item" data-view="list">
-                    <i class="fa-solid fa-list-ul"></i> 支付列表
-                </a>
-                <a href="#" class="nav-item" data-view="detail">
-                    <i class="fa-solid fa-file-lines"></i> 支付详情
-                </a>
-            </nav>
-            <div class="navbar-right">
-                <span class="env-tag">DEV</span>
+<div class="app-shell">
+    <header class="hero">
+        <div class="hero__left">
+            <p class="hero__eyebrow">Payment Control Center</p>
+            <h1><span aria-hidden="true">&#128179;</span> <span data-i18n="app.title">支付处理系统</span></h1>
+            <p class="hero__summary" data-i18n="app.subtitle">快速创建支付、追踪状态与历史，围绕幂等与可追溯性设计。</p>
+        </div>
+        <div class="hero__right">
+            <button class="btn btn--ghost hero__lang" id="languageToggleBtn" type="button">English</button>
+            <div class="hero__user" aria-label="current-user">
+                <span class="hero__user-icon" aria-hidden="true">&#128100;</span>
+                <span class="hero__user-text" data-i18n="hero.loggedIn">已登录用户</span>
             </div>
         </div>
     </header>
 
-    <!-- 内容区 -->
-    <main class="page-main">
+    <div class="workspace">
+        <aside class="sidebar" aria-label="导航">
+            <button class="tab-btn is-active" data-tab="create" type="button" data-i18n="tab.create">创建支付</button>
+            <button class="tab-btn" data-tab="list" type="button" data-i18n="tab.list">支付列表</button>
+            <button class="tab-btn" data-tab="detail" type="button" data-i18n="tab.detail">支付详情</button>
+            <button class="tab-btn tab-btn--quiet" id="quickRefreshBtn" type="button" data-i18n="tab.refresh">刷新当前列表</button>
+        </aside>
 
-        <!-- 创建支付 -->
-        <div id="view-create" class="view active">
-            <div class="page-header">
-                <h2>创建支付</h2>
-            </div>
-            <div class="card">
-                <form id="createForm">
-                    <div class="form-grid">
-                        <div class="form-item">
-                            <label for="sourceAccount">付款账户 <em>*</em></label>
-                            <input type="text" id="sourceAccount" placeholder="e.g. ACC001" required>
-                        </div>
-                        <div class="form-item">
-                            <label for="destinationAccount">收款账户 <em>*</em></label>
-                            <input type="text" id="destinationAccount" placeholder="e.g. ACC002" required>
-                        </div>
-                        <div class="form-item">
-                            <label for="amount">金额（CNY）<em>*</em></label>
-                            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required>
-                        </div>
-                        <div class="form-item">
-                            <label for="reference">参考号 / 备注</label>
-                            <input type="text" id="reference" placeholder="e.g. INV-2026001">
-                        </div>
-                        <div class="form-item">
-                            <label for="idempotencyKey">幂等键</label>
-                            <div class="input-adornment">
-                                <input type="text" id="idempotencyKey" readonly>
-                                <button type="button" id="regenKeyBtn" class="btn-adornment" title="重新生成">
-                                    <i class="fa-solid fa-arrows-rotate"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-paper-plane"></i> 提交
-                        </button>
-                        <button type="reset" class="btn btn-default">重置</button>
-                    </div>
-                </form>
-                <div id="createFeedback" style="display:none"></div>
-            </div>
-        </div>
-
-        <!-- 支付列表 -->
-        <div id="view-list" class="view">
-            <div class="page-header">
-                <h2>支付列表</h2>
-            </div>
-            <div class="card">
-                <div class="toolbar">
-                    <div class="toolbar-filters">
-                        <select id="statusFilter">
-                            <option value="">全部状态</option>
-                            <option value="CREATED">已创建</option>
-                            <option value="VALIDATED">已验证</option>
-                            <option value="SENT">已发送</option>
-                            <option value="COMPLETED">已完成</option>
-                            <option value="FAILED">失败</option>
-                        </select>
-                        <select id="pageSize">
-                            <option value="10">10 条/页</option>
-                            <option value="20" selected>20 条/页</option>
-                            <option value="50">50 条/页</option>
-                        </select>
-                        <button id="queryBtn" class="btn btn-primary">
-                            <i class="fa-solid fa-magnifying-glass"></i> 查询
-                        </button>
-                    </div>
-                    <span id="totalCount" class="total-count"></span>
+        <main class="content" aria-live="polite">
+            <section id="create" class="panel is-active" data-panel>
+                <div class="panel__head">
+                    <h2 data-i18n="create.title">创建支付</h2>
+                    <p data-i18n="create.desc">填写关键字段并提交。系统基于幂等键防止重复创建。</p>
                 </div>
-                <div class="table-wrap">
+
+                <form id="createForm" class="form-grid" novalidate>
+                    <label class="field">
+                        <span data-i18n="field.source">付款账户</span>
+                        <input id="sourceAccount" name="sourceAccount" type="text" placeholder="例如 ACC001" data-i18n-placeholder="ph.source" maxlength="50" required>
+                    </label>
+                    <label class="field">
+                        <span data-i18n="field.destination">收款账户</span>
+                        <input id="destinationAccount" name="destinationAccount" type="text" placeholder="例如 ACC002" data-i18n-placeholder="ph.destination" maxlength="50" required>
+                    </label>
+                    <label class="field">
+                        <span data-i18n="field.amount">金额（CNY）</span>
+                        <input id="amount" name="amount" type="number" step="0.01" min="0.01" placeholder="1500.50" data-i18n-placeholder="ph.amount" required>
+                    </label>
+                    <label class="field">
+                        <span data-i18n="field.reference">参考号 / 备注</span>
+                        <input id="reference" name="reference" type="text" placeholder="例如 INV-20260727" data-i18n-placeholder="ph.reference" maxlength="255">
+                    </label>
+                    <div class="field field--full">
+                        <label for="idempotencyKey"><span data-i18n="field.idempotency">幂等键</span></label>
+                        <div class="inline-input">
+                            <input id="idempotencyKey" name="idempotencyKey" type="text" readonly>
+                            <button id="generateKeyBtn" class="btn btn--ghost" type="button" data-i18n="btn.regenerate">重新生成</button>
+                        </div>
+                    </div>
+
+                    <div class="actions field--full">
+                        <button class="btn btn--primary" id="submitCreateBtn" type="submit" data-i18n="btn.create">创建支付</button>
+                        <button class="btn btn--secondary" id="fillDemoBtn" type="button" data-i18n="btn.fillDemo">填充示例</button>
+                        <button class="btn btn--ghost" type="reset" data-i18n="btn.reset">重置</button>
+                    </div>
+                    <p id="createFormHint" class="hint field--full" data-i18n="hint.default">金额必须大于 0，且付款账户和收款账户不能相同。</p>
+                </form>
+
+                <div id="createResult" class="feedback"></div>
+            </section>
+
+            <section id="list" class="panel" data-panel>
+                <div class="panel__head">
+                    <h2 data-i18n="list.title">支付列表</h2>
+                    <p data-i18n="list.desc">支持状态筛选与分页。点击行可直接查看详情。</p>
+                </div>
+
+                <div class="toolbar">
+                    <label>
+                        <span data-i18n="list.status">状态</span>
+                        <select id="statusFilter">
+                            <option value="" data-i18n="status.all">全部</option>
+                            <option value="CREATED">CREATED</option>
+                            <option value="VALIDATED">VALIDATED</option>
+                            <option value="SENT">SENT</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="FAILED">FAILED</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span data-i18n="list.pageSize">每页</span>
+                        <select id="pageSize">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </label>
+                    <button class="btn btn--primary" id="queryBtn" type="button" data-i18n="btn.query">查询</button>
+                </div>
+
+                <div class="table-wrap" id="listRegion">
                     <table id="paymentTable">
                         <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>幂等键</th>
-                                <th>付款账户</th>
-                                <th>收款账户</th>
-                                <th>金额 (CNY)</th>
-                                <th>状态</th>
-                                <th>创建时间</th>
-                                <th style="width:80px">操作</th>
-                            </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th data-i18n="col.source">付款方</th>
+                            <th data-i18n="col.destination">收款方</th>
+                            <th data-i18n="col.amount">金额</th>
+                            <th data-i18n="col.status">状态</th>
+                            <th data-i18n="col.createdAt">创建时间</th>
+                            <th data-i18n="col.action">操作</th>
+                        </tr>
                         </thead>
-                        <tbody id="tableBody">
-                            <tr>
-                                <td colspan="8" class="table-placeholder">
-                                    <span class="spinner"></span> 加载中...
-                                </td>
-                            </tr>
+                        <tbody id="paymentTableBody">
+                        <tr>
+                            <td colspan="7" class="empty" data-i18n="list.initial">点击“查询”加载数据</td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
+
                 <div id="pagination" class="pagination"></div>
-            </div>
-        </div>
+            </section>
 
-        <!-- 支付详情 -->
-        <div id="view-detail" class="view">
-            <div class="page-header">
-                <h2>支付详情</h2>
-            </div>
-            <div class="card">
-                <div class="detail-search-bar">
-                    <label for="detailId" class="sr-only">支付 ID</label>
-                    <input type="number" id="detailId" placeholder="输入支付 ID" min="1">
-                    <button id="detailQueryBtn" class="btn btn-primary">
-                        <i class="fa-solid fa-magnifying-glass"></i> 查询
-                    </button>
+            <section id="detail" class="panel" data-panel>
+                <div class="panel__head">
+                    <h2 data-i18n="detail.title">支付详情</h2>
+                    <p data-i18n="detail.desc">输入支付ID，查看当前状态、错误信息与完整状态轨迹。</p>
                 </div>
-                <div id="detailBody"></div>
-            </div>
-        </div>
 
-    </main>
+                <div class="detail-query">
+                    <label for="detailPaymentId" class="sr-only" data-i18n="detail.idLabel">支付ID</label>
+                    <input type="number" id="detailPaymentId" min="1" placeholder="输入支付ID，例如 1" data-i18n-placeholder="ph.detailId">
+                    <button id="detailQueryBtn" class="btn btn--primary" type="button" data-i18n="btn.queryDetail">查询详情</button>
+                </div>
 
-    <footer class="page-footer">
-        <i class="fa-solid fa-shield-halved"></i>
-        &copy; 2026 Payment Processing System
-    </footer>
+                <div id="detailContent" class="detail-grid detail-grid--empty" data-empty-text>尚未查询任何支付记录</div>
 
-    <script src="/js/api.js"></script>
-    <script src="/js/main.js"></script>
+                <section class="status-flow-card" id="statusFlowSection" hidden>
+                    <h3 data-i18n="detail.flow">状态流程</h3>
+                    <div id="statusFlow" class="status-flow"></div>
+                </section>
+
+                <section id="historySection" class="history" hidden>
+                    <h3 data-i18n="detail.history">状态变更历史</h3>
+                    <div id="historyTimeline"></div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer" data-i18n="footer">JDBC Template + MySQL + Scheduler Timeout | 2026</footer>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
 </body>
 </html>
