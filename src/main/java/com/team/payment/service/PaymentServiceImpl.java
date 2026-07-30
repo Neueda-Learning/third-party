@@ -180,21 +180,9 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
         log.info("Creating payment in service. idempotencyKey={}, request={}", idempotencyKey, request);
 
-        PaymentException validationError = validatePayment(request, idempotencyKey);
+        PaymentException validationError = validateCreateRequest(request, idempotencyKey);
         if (validationError != null) {
-            return PaymentResponse.builder()
-                    .idempotencyKey(idempotencyKey)
-                    .sourceAccount(request != null ? request.getSourceAccount() : null)
-                    .destinationAccount(request != null ? request.getDestinationAccount() : null)
-                    .amount(request != null ? request.getAmount() : null)
-                    .currency(request != null && request.getCurrency() != null && !request.getCurrency().isBlank() ? request.getCurrency() : "CNY")
-                    .status(PaymentStatus.FAILED.name())
-                    .errorCode(validationError.getErrorCode())
-                    .errorMessage(validationError.getMessage())
-                    .reference(request != null ? request.getReference() : null)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+            return buildValidationFailureResponse(request, idempotencyKey, validationError);
         }
 
         Payment existing = paymentDao.findByIdempotencyKey(idempotencyKey);
@@ -202,41 +190,74 @@ public class PaymentServiceImpl implements PaymentService {
             return PaymentResponse.fromEntity(existing);
         }
 
-        String normalizedCurrency = request.getCurrency() == null || request.getCurrency().isBlank()
-                ? "CNY"
-                : request.getCurrency().trim().toUpperCase();
+        Payment created = persistCreatedPayment(request, idempotencyKey);
+        runAutoLifecycleAfterCreate(created.getId());
 
+// 创建接口始终返回“创建成功时”的快照
+        return PaymentResponse.fromEntity(created);
+    }
+
+    private PaymentResponse buildValidationFailureResponse(
+            CreatePaymentRequest request,
+            String idempotencyKey,
+            PaymentException validationError
+    ) {
+        return PaymentResponse.builder()
+                .idempotencyKey(idempotencyKey)
+                .sourceAccount(request != null ? request.getSourceAccount() : null)
+                .destinationAccount(request != null ? request.getDestinationAccount() : null)
+                .amount(request != null ? request.getAmount() : null)
+                .currency(request != null && request.getCurrency() != null && !request.getCurrency().isBlank() ? request.getCurrency() : "CNY")
+                .status(PaymentStatus.FAILED.name())
+                .errorCode(validationError.getErrorCode())
+                .errorMessage(validationError.getMessage())
+                .reference(request != null ? request.getReference() : null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    private Payment persistCreatedPayment(CreatePaymentRequest request, String idempotencyKey) {
         LocalDateTime now = LocalDateTime.now();
-        Payment payment = Payment.builder()
+        Payment created = paymentDao.create(Payment.builder()
                 .idempotencyKey(idempotencyKey)
                 .sourceAccount(request.getSourceAccount().trim())
                 .destinationAccount(request.getDestinationAccount().trim())
                 .amount(request.getAmount())
-                .currency(normalizedCurrency)
+                .currency(normalizeCurrency(request.getCurrency()))
                 .status(PaymentStatus.CREATED.name())
                 .reference(request.getReference())
                 .createdAt(now)
                 .updatedAt(now)
-                .build();
-
-        Payment created = paymentDao.create(payment);
+                .build());
 
         saveHistory(created.getId(), null, PaymentStatus.CREATED.name(), "Payment created", "API");
+        return created;
+    }
 
+    private void runAutoLifecycleAfterCreate(Long paymentId) {
         if (shouldFail(createFailureRatio)) {
-            failPaymentInternal(created.getId(), "CREATE_STEP_FAILED", "Create step failed accidentally", "SYSTEM");
-        } else {
-            PaymentResponse validated = validatePayment(created.getId());
-            if (!PaymentStatus.FAILED.name().equals(validated.getStatus())) {
-                PaymentResponse sent = sendPayment(created.getId());
-                if (!PaymentStatus.FAILED.name().equals(sent.getStatus())) {
-                    completePayment(created.getId());
-                }
-            }
+            failPaymentInternal(paymentId, "CREATE_STEP_FAILED", "Create step failed accidentally", "SYSTEM");
+            return;
         }
 
-// 创建接口始终返回“创建成功时”的快照
-        return PaymentResponse.fromEntity(created);
+        PaymentResponse validated = validatePayment(paymentId);
+        if (PaymentStatus.FAILED.name().equals(validated.getStatus())) {
+            return;
+        }
+
+        PaymentResponse sent = sendPayment(paymentId);
+        if (PaymentStatus.FAILED.name().equals(sent.getStatus())) {
+            return;
+        }
+
+        completePayment(paymentId);
+    }
+
+    private String normalizeCurrency(String currency) {
+        return currency == null || currency.isBlank()
+                ? "CNY"
+                : currency.trim().toUpperCase();
     }
 
     @Override
@@ -361,7 +382,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .build());
     }
 
-    private PaymentException validatePayment(CreatePaymentRequest request, String idempotencyKey) {
+    private PaymentException validateCreateRequest(CreatePaymentRequest request, String idempotencyKey) {
         if (request == null) {
             return new PaymentException("INVALID_REQUEST", "Request must not be null");
         }
@@ -371,10 +392,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         String normalizedIdempotencyKey = idempotencyKey.trim();
-        Payment existingPayment = paymentDao.findByIdempotencyKey(normalizedIdempotencyKey);
-        if (existingPayment != null) {
-            return new PaymentException("DUPLICATE_IDEMPOTENCY_KEY", "Idempotency key already exists: " + normalizedIdempotencyKey);
-        }
 
         String sourceAccount = request.getSourceAccount();
         String destinationAccount = request.getDestinationAccount();
@@ -424,6 +441,11 @@ public class PaymentServiceImpl implements PaymentService {
                     "INVALID_AMOUNT_SCALE",
                     "Amount has too many decimal places for currency " + normalizedCurrency + ", allowed: " + allowedScale
             );
+        }
+
+        Payment existingPayment = paymentDao.findByIdempotencyKey(normalizedIdempotencyKey);
+        if (existingPayment != null) {
+            return new PaymentException("DUPLICATE_IDEMPOTENCY_KEY", "Idempotency key already exists: " + normalizedIdempotencyKey);
         }
 
         return null;
