@@ -1,9 +1,5 @@
 package com.team.payment.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,6 +25,15 @@ public class Payment {
 
     /** 收款账户 */
     private String destinationAccount;
+
+    /** 付款账户ID（关联account表） */
+    private Long fromAccountId;
+
+    /** 收款账户ID（关联account表） */
+    private Long toAccountId;
+
+    /** 汇率快照（跨币种时必填，同币种为null） */
+    private BigDecimal exchangeRate;
 
     /** 金额（2位小数） */
     private BigDecimal amount;
@@ -57,4 +62,3 @@ public class Payment {
     /** 更新时间 */
     private LocalDateTime updatedAt;
 }
-

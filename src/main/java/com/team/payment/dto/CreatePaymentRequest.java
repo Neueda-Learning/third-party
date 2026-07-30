@@ -1,16 +1,11 @@
 package com.team.payment.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 /**
  * 创建支付请求DTO
- * 成员A负责实现
  */
 @Data
 @NoArgsConstructor
@@ -18,12 +13,23 @@ import java.math.BigDecimal;
 @Builder
 public class CreatePaymentRequest {
 
-    /** 付款账户 */
+    /** 付款账户ID */
+    @NotNull(message = "fromAccountId 不能为null")
+    private Long fromAccountId;
+
+    /** 收款账户ID */
+    @NotNull(message = "toAccountId 不能为null")
+    private Long toAccountId;
+
+    /** 汇率（跨币种时必填，同币种可不传） */
+    private BigDecimal exchangeRate;
+
+    /** 付款账户名（冗余字段，用于显示） */
     @NotBlank(message = "sourceAccount 不能为空")
     @Size(min = 1, max = 50, message = "sourceAccount 长度应为1-50")
     private String sourceAccount;
 
-    /** 收款账户 */
+    /** 收款账户名（冗余字段，用于显示） */
     @NotBlank(message = "destinationAccount 不能为空")
     @Size(min = 1, max = 50, message = "destinationAccount 长度应为1-50")
     private String destinationAccount;
@@ -41,4 +47,3 @@ public class CreatePaymentRequest {
     @Size(max = 255, message = "reference 长度最多255")
     private String reference;
 }
-

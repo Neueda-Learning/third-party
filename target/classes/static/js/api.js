@@ -1,153 +1,119 @@
-/**
- * API 请求模块
- * 封装所有后端API调用
- */
+const API_BASE_URL = "/api/payments";
+const ACCOUNT_BASE_URL = "/api/accounts";
 
-const API_BASE_URL = '/api/payments';
+// ─── 公共 HTTP 工具 ───────────────────────────────────────────────────────────
 
-class PaymentAPI {
-    /**
-     * 创建支付
-     */
-    static async createPayment(data, idempotencyKey) {
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Idempotency-Key': idempotencyKey
-            },
-            body: JSON.stringify(data)
-        });
+async function apiRequest(url, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-        if (response.status === 201 || response.status === 200) {
-            return { code: 'SUCCESS', data: await response.json(), status: response.status };
-        } else if (response.status === 409) {
-            return { code: 'CONFLICT', data: await response.json(), status: response.status };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error, status: response.status };
-        }
-    }
-
-    /**
-     * 获取支付详情
-     */
-    static async getPaymentDetail(paymentId) {
-        const response = await fetch(`${API_BASE_URL}/${paymentId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return { code: 'SUCCESS', data: await response.json() };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error, status: response.status };
-        }
-    }
-
-    /**
-     * 获取支付列表
-     */
-    static async listPayments(page = 0, size = 20, status = null) {
-        let url = `${API_BASE_URL}?page=${page}&size=${size}`;
-        if (status && status !== '') {
-            url += `&status=${status}`;
-        }
-
+    try {
         const response = await fetch(url, {
-            method: 'GET',
+            method: options.method || "GET",
             headers: {
-                'Content-Type': 'application/json'
-            }
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            },
+            body: options.body,
+            signal: controller.signal
         });
 
-        if (response.ok) {
-            return { code: 'SUCCESS', data: await response.json() };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error };
-        }
-    }
-
-    /**
-     * 获取支付历史
-     */
-    static async getPaymentHistory(paymentId) {
-        const response = await fetch(`${API_BASE_URL}/${paymentId}/history`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        const data = await readJson(response);
 
         if (response.ok) {
-            return { code: 'SUCCESS', data: await response.json() };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error };
+            return { ok: true, status: response.status, data };
         }
-    }
 
-    /**
-     * 验证支付
-     */
-    static async validatePayment(paymentId) {
-        return this._updatePaymentStatus(paymentId, 'validate');
-    }
-
-    /**
-     * 发送支付
-     */
-    static async sendPayment(paymentId) {
-        return this._updatePaymentStatus(paymentId, 'send');
-    }
-
-    /**
-     * 完成支付
-     */
-    static async completePayment(paymentId) {
-        return this._updatePaymentStatus(paymentId, 'complete');
-    }
-
-    /**
-     * 失败支付
-     */
-    static async failPayment(paymentId, errorCode = 'MANUAL_FAILURE', errorMessage = '手动标记为失败') {
-        const response = await fetch(`${API_BASE_URL}/${paymentId}/fail?errorCode=${errorCode}&errorMessage=${encodeURIComponent(errorMessage)}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return { code: 'SUCCESS', data: await response.json() };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error, status: response.status };
-        }
-    }
-
-    /**
-     * 通用的状态更新方法
-     */
-    static async _updatePaymentStatus(paymentId, action) {
-        const response = await fetch(`${API_BASE_URL}/${paymentId}/${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return { code: 'SUCCESS', data: await response.json() };
-        } else {
-            const error = await response.json();
-            return { code: 'ERROR', data: error, status: response.status };
-        }
+        return {
+            ok: false,
+            status: response.status,
+            error: normalizeError(data, response.status)
+        };
+    } catch (error) {
+        const message = error.name === "AbortError"
+            ? "请求超时，请稍后重试"
+            : "网络异常，请检查连接后重试";
+        return { ok: false, status: 0, error: { errorCode: "NETWORK_ERROR", message } };
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
+async function readJson(response) {
+    try {
+        return await response.json();
+    } catch (_) {
+        return null;
+    }
+}
+
+function normalizeError(payload, status) {
+    if (payload && typeof payload === "object") {
+        return {
+            errorCode: payload.errorCode || payload.code || `HTTP_${status}`,
+            message: payload.message || "请求失败，请稍后重试"
+        };
+    }
+    return { errorCode: `HTTP_${status}`, message: "请求失败，请稍后重试" };
+}
+
+// ─── 支付 API ─────────────────────────────────────────────────────────────────
+
+class PaymentAPI {
+    static async createPayment(payload, idempotencyKey) {
+        return apiRequest(API_BASE_URL, {
+            method: "POST",
+            headers: { "Idempotency-Key": idempotencyKey },
+            body: JSON.stringify(payload)
+        });
+    }
+
+    static async listPayments({ page = 0, size = 20, status = "" } = {}) {
+        const params = new URLSearchParams({ page: String(page), size: String(size) });
+        if (status) params.set("status", status);
+        return apiRequest(`${API_BASE_URL}?${params.toString()}`, { method: "GET" });
+    }
+
+    static async getPaymentDetail(paymentId) {
+        return apiRequest(`${API_BASE_URL}/${paymentId}`, { method: "GET" });
+    }
+
+    static async getPaymentHistory(paymentId) {
+        return apiRequest(`${API_BASE_URL}/${paymentId}/history`, { method: "GET" });
+    }
+}
+
+// ─── 账户 API ─────────────────────────────────────────────────────────────────
+
+class AccountAPI {
+    /** POST /api/accounts — 创建账户 */
+    static async createAccount(payload) {
+        return apiRequest(ACCOUNT_BASE_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+    }
+
+    /** GET /api/accounts — 查询全部账户 */
+    static async getAllAccounts() {
+        return apiRequest(ACCOUNT_BASE_URL, { method: "GET" });
+    }
+
+    /** GET /api/accounts/{id} — 按 ID 查询账户 */
+    static async getAccountById(id) {
+        return apiRequest(`${ACCOUNT_BASE_URL}/${id}`, { method: "GET" });
+    }
+
+    /** GET /api/accounts/by-account-name/{accountName} — 按账户名查询账户 */
+    static async getAccountByAccountName(accountName) {
+        return apiRequest(`${ACCOUNT_BASE_URL}/by-account-name/${encodeURIComponent(accountName)}`, { method: "GET" });
+    }
+
+    /** POST /api/accounts/{id}/deposit — 充值 */
+    static async deposit(id, amount) {
+        return apiRequest(`${ACCOUNT_BASE_URL}/${id}/deposit`, {
+            method: "POST",
+            body: JSON.stringify({ amount })
+        });
+    }
+}

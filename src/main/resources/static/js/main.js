@@ -88,7 +88,47 @@ const i18n = {
         "flow.created": "创建",
         "flow.validated": "验证",
         "flow.sent": "发送",
-        "flow.current": "当前状态"
+        "flow.current": "当前状态",
+        "tab.account": "账户管理",
+        "account.title": "账户管理",
+        "account.desc": "创建账户、查询账户信息、为账户充值。",
+        "account.create.title": "创建账户",
+        "account.query.title": "查询账户",
+        "account.deposit.title": "账户充值",
+        "account.field.accountName": "账户名",
+        "account.field.currency": "币种",
+        "account.field.initialBalance": "初始余额",
+        "account.field.accountId": "账户 ID",
+        "account.query.title": "查询账户",
+        "account.query.desc": "填写 ID 或账户名查询单个账户，两者均不填则查询全部。",
+        "account.query.byId": "账户 ID",
+        "account.query.byAccountName": "账户名",
+        "account.btn.query": "查询",
+        "account.btn.create": "创建账户",
+        "account.btn.creating": "创建中...",
+        "account.btn.queryById": "按 ID 查询",
+        "account.btn.queryByAccountName": "按账户名查询",
+        "account.btn.deposit": "确认充值",
+        "account.btn.depositing": "充值中...",
+        "ph.accAccountName": "例如 alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "输入账户 ID",
+        "account.label.id": "账户 ID",
+        "account.label.accountName": "账户名",
+        "account.label.currency": "币种",
+        "account.label.balance": "当前余额",
+        "account.label.createdAt": "创建时间",
+        "account.label.updatedAt": "更新时间",
+        "account.empty": "尚未查询任何账户",
+        "account.list.empty": "暂无账户数据",
+        "msg.accCreateOk": "账户创建成功，ID: {id}",
+        "msg.accCreateFail": "账户创建失败：{message}",
+        "msg.accQueryFail": "账户查询失败：{message}",
+        "msg.depositOk": "充值成功，账户 ID: {id}，当前余额: {balance}",
+        "msg.depositFail": "充值失败：{message}",
+        "msg.accInvalidId": "请输入有效的账户 ID",
+        "msg.accAccountNameEmpty": "请输入账户名"
     },
     en: {
         "app.title": "Payment Processing System",
@@ -170,7 +210,47 @@ const i18n = {
         "flow.created": "Created",
         "flow.validated": "Validated",
         "flow.sent": "Sent",
-        "flow.current": "Current"
+        "flow.current": "Current",
+        "tab.account": "Accounts",
+        "account.title": "Account Management",
+        "account.desc": "Create accounts, query account info, and deposit funds.",
+        "account.create.title": "Create Account",
+        "account.query.title": "Query Account",
+        "account.query.desc": "Enter ID or account name to query a single account, or leave both empty to list all.",
+        "account.query.byId": "Account ID",
+        "account.query.byAccountName": "Account Name",
+        "account.deposit.title": "Deposit",
+        "account.field.accountName": "Account Name",
+        "account.field.currency": "Currency",
+        "account.field.initialBalance": "Initial Balance",
+        "account.field.accountId": "Account ID",
+        "account.field.depositAmount": "Deposit Amount",
+        "account.btn.query": "Query",
+        "account.btn.create": "Create Account",
+        "account.btn.creating": "Creating...",
+        "account.btn.queryById": "Query by ID",
+        "account.btn.queryByAccountName": "Query by Account Name",
+        "account.btn.deposit": "Confirm Deposit",
+        "account.btn.depositing": "Depositing...",
+        "ph.accAccountName": "e.g. alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "Enter account ID",
+        "account.label.id": "Account ID",
+        "account.label.accountName": "Account Name",
+        "account.label.currency": "Currency",
+        "account.label.balance": "Balance",
+        "account.label.createdAt": "Created At",
+        "account.label.updatedAt": "Updated At",
+        "account.empty": "No account queried yet",
+        "account.list.empty": "No account data",
+        "msg.accCreateOk": "Account created, ID: {id}",
+        "msg.accCreateFail": "Account creation failed: {message}",
+        "msg.accQueryFail": "Account query failed: {message}",
+        "msg.depositOk": "Deposit successful, Account ID: {id}, Balance: {balance}",
+        "msg.depositFail": "Deposit failed: {message}",
+        "msg.accInvalidId": "Please enter a valid account ID",
+        "msg.accAccountNameEmpty": "Please enter an account name"
     }
 };
 
@@ -215,6 +295,18 @@ function bindEvents() {
             handleDetailQuery();
         }
     });
+
+    // 账户管理事件
+    // 账户管理事件
+    document.getElementById("createAccountForm").addEventListener("submit", handleCreateAccount);
+    document.getElementById("queryAccountBtn").addEventListener("click", handleQueryAccount);
+    document.getElementById("queryAccountId").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("queryAccountAccountName").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("depositForm").addEventListener("submit", handleDeposit);
 
     ["sourceAccount", "destinationAccount", "amount"].forEach((id) => {
         document.getElementById(id).addEventListener("input", updateCreateHint);
@@ -273,6 +365,11 @@ function applyLocale() {
     const detailContent = document.querySelector("[data-empty-text]");
     if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
         detailContent.textContent = t("detail.empty");
+    }
+
+    const accDetailContent = document.getElementById("accountDetailContent");
+    if (accDetailContent && accDetailContent.classList.contains("detail-grid--empty")) {
+        accDetailContent.textContent = t("account.empty");
     }
 }
 
@@ -664,3 +761,203 @@ function escapeHtml(value) {
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
+
+// ─── 账户管理 ─────────────────────────────────────────────────────────────────
+
+async function handleCreateAccount(event) {
+    event.preventDefault();
+    const accountName = document.getElementById("accAccountName").value.trim();
+    const currency = document.getElementById("accCurrency").value.trim() || "CNY";
+    const initialBalance = Number(document.getElementById("accInitialBalance").value);
+
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+
+    const btn = document.getElementById("submitCreateAccountBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.creating");
+
+    const result = await AccountAPI.createAccount({ accountName, currency, initialBalance });
+
+    btn.disabled = false;
+    btn.textContent = t("account.btn.create");
+
+    const feedback = document.getElementById("createAccountResult");
+    if (result.ok) {
+        const msg = t("msg.accCreateOk", { id: result.data.id });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("createAccountForm").reset();
+    } else {
+        const msg = t("msg.accCreateFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
+    }
+}
+
+async function handleQueryAccountById() {
+    const raw = document.getElementById("queryAccountId").value;
+    const id = Number(raw);
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountById(id);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccountByAccountName() {
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountByAccountName(accountName);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccount() {
+    const idRaw = document.getElementById("queryAccountId").value.trim();
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    const id = Number(idRaw);
+
+    if (idRaw && id >= 1) {
+        const result = await AccountAPI.getAccountById(id);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else if (accountName) {
+        const result = await AccountAPI.getAccountByAccountName(accountName);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else {
+        const result = await AccountAPI.getAllAccounts();
+        hideAccountDetail();
+        renderAccountList(result);
+    }
+}
+
+function hideAccountList() {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "none";
+    listEl.innerHTML = "";
+}
+
+function hideAccountDetail() {
+    const detailEl = document.getElementById("accountDetailContent");
+    detailEl.className = "detail-grid detail-grid--empty";
+    detailEl.textContent = "";
+    detailEl.style.display = "none";
+}
+
+function renderAccountList(result) {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "block";
+    if (!result.ok) {
+        listEl.innerHTML = `<p class="feedback feedback--error is-show">${escapeHtml(t("msg.accQueryFail", { message: result.error.message }))}</p>`;
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const accounts = result.data;
+    if (!accounts || accounts.length === 0) {
+        listEl.innerHTML = `<p class="empty" style="padding:1rem 0">${escapeHtml(t("account.list.empty"))}</p>`;
+        return;
+    }
+    listEl.innerHTML = `
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>${escapeHtml(t("account.label.accountName"))}</th>
+                        <th>${escapeHtml(t("account.label.currency"))}</th>
+                        <th>${escapeHtml(t("account.label.balance"))}</th>
+                        <th>${escapeHtml(t("account.label.createdAt"))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${accounts.map((acc) => `
+                        <tr>
+                            <td>#${acc.id}</td>
+                            <td>${escapeHtml(acc.accountName || "-")}</td>
+                            <td>${escapeHtml(acc.currency || "-")}</td>
+                            <td>${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}</td>
+                            <td>${formatDateTime(acc.createdAt)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderAccountDetail(result) {
+    const el = document.getElementById("accountDetailContent");
+    el.style.display = "";
+    if (!result.ok) {
+        el.className = "detail-grid detail-grid--empty";
+        el.textContent = t("msg.accQueryFail", { message: result.error.message });
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const acc = result.data;
+    el.className = "detail-grid";
+    const fields = [
+        [t("account.label.id"), `#${acc.id}`],
+        [t("account.label.accountName"), escapeHtml(acc.accountName || "-")],
+        [t("account.label.currency"), escapeHtml(acc.currency || "-")],
+        [t("account.label.balance"), `${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}`],
+        [t("account.label.createdAt"), formatDateTime(acc.createdAt)],
+        [t("account.label.updatedAt"), formatDateTime(acc.updatedAt)]
+    ];
+    el.innerHTML = fields
+        .map(([label, value]) => `
+            <article class="detail-item">
+                <div class="detail-item__label">${escapeHtml(label)}</div>
+                <div class="detail-item__value">${value}</div>
+            </article>
+        `)
+        .join("");
+}
+
+async function handleDeposit(event) {
+    event.preventDefault();
+    const id = Number(document.getElementById("depositAccountId").value);
+    const amount = Number(document.getElementById("depositAmount").value);
+
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    if (!amount || amount <= 0) {
+        showToast(t("msg.amountInvalid"), "error");
+        return;
+    }
+
+    const btn = document.getElementById("submitDepositBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.depositing");
+
+    const result = await AccountAPI.deposit(id, amount);
+
+    btn.disabled = false;
+    btn.textContent = t("account.btn.deposit");
+
+    const feedback = document.getElementById("depositResult");
+    if (result.ok) {
+        const msg = t("msg.depositOk", { id: result.data.id, balance: formatAmount(result.data.balance) });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("depositForm").reset();
+    } else {
+        const msg = t("msg.depositFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
+    }
+}
+

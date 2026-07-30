@@ -1,509 +1,963 @@
-/**
- * 主业务逻辑模块
- * 处理页面交互和API调用
- */
+const state = {
+    activeTab: "create",
+    page: 0,
+    pageSize: 20,
+    status: "",
+    selectedPaymentId: null,
+    locale: localStorage.getItem("ui-locale") || "zh"
+};
 
-let currentPage = 0;
-let currentPageSize = 20;
-let currentStatus = '';
+const i18n = {
+    zh: {
+        "app.title": "支付处理系统",
+        "app.subtitle": "快速创建支付、追踪状态与历史，围绕幂等与可追溯性设计。",
+        "hero.loggedIn": "已登录用户",
+        "hero.currency": "系统币种",
+        "hero.scheduler": "调度周期",
+        "hero.timeout": "超时阈值",
+        "tab.create": "创建支付",
+        "tab.list": "支付列表",
+        "tab.detail": "支付详情",
+        "tab.refresh": "刷新当前列表",
+        "create.title": "创建支付",
+        "create.desc": "填写关键字段并提交。系统基于幂等键防止重复创建。",
+        "field.source": "付款账户",
+        "field.destination": "收款账户",
+        "field.amount": "金额（CNY）",
+        "field.reference": "参考号 / 备注",
+        "field.idempotency": "幂等键",
+        "btn.regenerate": "重新生成",
+        "btn.create": "创建支付",
+        "btn.creating": "提交中...",
+        "btn.fillDemo": "填充示例",
+        "btn.reset": "重置",
+        "btn.query": "查询",
+        "btn.queryDetail": "查询详情",
+        "btn.detail": "详情",
+        "hint.default": "金额必须大于 0，且付款账户和收款账户不能相同。",
+        "hint.valid": "字段已通过前端校验，可以提交。",
+        "list.title": "支付列表",
+        "list.desc": "支持状态筛选与分页。点击行可直接查看详情。",
+        "list.status": "状态",
+        "list.pageSize": "每页",
+        "list.initial": "点击“查询”加载数据",
+        "list.loading": "加载中...",
+        "list.empty": "当前筛选条件下无数据",
+        "detail.title": "支付详情",
+        "detail.desc": "输入支付ID，查看当前状态、错误信息与完整状态轨迹。",
+        "detail.flow": "状态流程",
+        "detail.history": "状态变更历史",
+        "detail.idLabel": "支付ID",
+        "detail.empty": "尚未查询任何支付记录",
+        "detail.loading": "正在加载支付详情...",
+        "detail.invalidId": "请输入有效的支付ID",
+        "detail.noReason": "无补充说明",
+        "status.all": "全部",
+        "col.source": "付款方",
+        "col.destination": "收款方",
+        "col.amount": "金额",
+        "col.status": "状态",
+        "col.createdAt": "创建时间",
+        "col.action": "操作",
+        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "ph.source": "例如 ACC001",
+        "ph.destination": "例如 ACC002",
+        "ph.amount": "1500.50",
+        "ph.reference": "例如 INV-20260727",
+        "ph.detailId": "输入支付ID，例如 1",
+        "msg.requireFields": "请填写付款账户、收款账户和金额",
+        "msg.accountSame": "付款账户和收款账户不能相同",
+        "msg.amountInvalid": "金额必须大于 0",
+        "msg.createOk": "支付创建成功，ID: {id}",
+        "msg.createDup": "重复请求，返回已有记录，ID: {id}",
+        "msg.queryFail": "查询失败：{message}",
+        "msg.listFail": "列表加载失败：{message}",
+        "msg.detailFail": "详情加载失败：{message}",
+        "label.id": "支付ID",
+        "label.idempotency": "幂等键",
+        "label.source": "付款账户",
+        "label.destination": "收款账户",
+        "label.amount": "金额",
+        "label.status": "当前状态",
+        "label.reference": "参考号",
+        "label.createdAt": "创建时间",
+        "label.updatedAt": "更新时间",
+        "label.errorCode": "错误码",
+        "label.errorMessage": "错误信息",
+        "label.initial": "初始",
+        "flow.created": "创建",
+        "flow.validated": "验证",
+        "flow.sent": "发送",
+        "flow.current": "当前状态",
+        "tab.account": "账户管理",
+        "account.title": "账户管理",
+        "account.desc": "创建账户、查询账户信息、为账户充值。",
+        "account.create.title": "创建账户",
+        "account.query.title": "查询账户",
+        "account.deposit.title": "账户充值",
+        "account.field.accountName": "账户名",
+        "account.field.currency": "币种",
+        "account.field.initialBalance": "初始余额",
+        "account.field.accountId": "账户 ID",
+        "account.query.title": "查询账户",
+        "account.query.desc": "填写 ID 或账户名查询单个账户，两者均不填则查询全部。",
+        "account.query.byId": "账户 ID",
+        "account.query.byAccountName": "账户名",
+        "account.btn.query": "查询",
+        "account.btn.create": "创建账户",
+        "account.btn.creating": "创建中...",
+        "account.btn.queryById": "按 ID 查询",
+        "account.btn.queryByAccountName": "按账户名查询",
+        "account.btn.deposit": "确认充值",
+        "account.btn.depositing": "充值中...",
+        "ph.accAccountName": "例如 alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "输入账户 ID",
+        "account.label.id": "账户 ID",
+        "account.label.accountName": "账户名",
+        "account.label.currency": "币种",
+        "account.label.balance": "当前余额",
+        "account.label.createdAt": "创建时间",
+        "account.label.updatedAt": "更新时间",
+        "account.empty": "尚未查询任何账户",
+        "account.list.empty": "暂无账户数据",
+        "msg.accCreateOk": "账户创建成功，ID: {id}",
+        "msg.accCreateFail": "账户创建失败：{message}",
+        "msg.accQueryFail": "账户查询失败：{message}",
+        "msg.depositOk": "充值成功，账户 ID: {id}，当前余额: {balance}",
+        "msg.depositFail": "充值失败：{message}",
+        "msg.accInvalidId": "请输入有效的账户 ID",
+        "msg.accAccountNameEmpty": "请输入账户名"
+    },
+    en: {
+        "app.title": "Payment Processing System",
+        "app.subtitle": "Create payments, track status and history with idempotency-first design.",
+        "hero.loggedIn": "Signed-in User",
+        "hero.currency": "Currency",
+        "hero.scheduler": "Scheduler",
+        "hero.timeout": "Timeout",
+        "tab.create": "Create",
+        "tab.list": "Payments",
+        "tab.detail": "Detail",
+        "tab.refresh": "Refresh Current List",
+        "create.title": "Create Payment",
+        "create.desc": "Submit key fields. Idempotency key protects against duplicate creation.",
+        "field.source": "Source Account",
+        "field.destination": "Destination Account",
+        "field.amount": "Amount (CNY)",
+        "field.reference": "Reference / Note",
+        "field.idempotency": "Idempotency Key",
+        "btn.regenerate": "Regenerate",
+        "btn.create": "Create Payment",
+        "btn.creating": "Submitting...",
+        "btn.fillDemo": "Fill Demo",
+        "btn.reset": "Reset",
+        "btn.query": "Query",
+        "btn.queryDetail": "Get Detail",
+        "btn.detail": "Detail",
+        "hint.default": "Amount must be greater than 0, and source/destination accounts must differ.",
+        "hint.valid": "Front-end validation passed. Ready to submit.",
+        "list.title": "Payment List",
+        "list.desc": "Filter by status and page through results. Click any row to open details.",
+        "list.status": "Status",
+        "list.pageSize": "Page Size",
+        "list.initial": "Click \"Query\" to load data",
+        "list.loading": "Loading...",
+        "list.empty": "No results for current filters",
+        "detail.title": "Payment Detail",
+        "detail.desc": "Input payment ID to inspect status, errors and full transition history.",
+        "detail.flow": "Status Flow",
+        "detail.history": "Status History",
+        "detail.idLabel": "Payment ID",
+        "detail.empty": "No payment queried yet",
+        "detail.loading": "Loading payment detail...",
+        "detail.invalidId": "Please enter a valid payment ID",
+        "detail.noReason": "No additional reason",
+        "status.all": "All",
+        "col.source": "Source",
+        "col.destination": "Destination",
+        "col.amount": "Amount",
+        "col.status": "Status",
+        "col.createdAt": "Created At",
+        "col.action": "Action",
+        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "ph.source": "e.g. ACC001",
+        "ph.destination": "e.g. ACC002",
+        "ph.amount": "1500.50",
+        "ph.reference": "e.g. INV-20260727",
+        "ph.detailId": "Enter payment ID, e.g. 1",
+        "msg.requireFields": "Please fill source account, destination account and amount",
+        "msg.accountSame": "Source and destination accounts cannot be the same",
+        "msg.amountInvalid": "Amount must be greater than 0",
+        "msg.createOk": "Payment created, ID: {id}",
+        "msg.createDup": "Duplicate request, existing payment returned, ID: {id}",
+        "msg.queryFail": "Query failed: {message}",
+        "msg.listFail": "Failed to load list: {message}",
+        "msg.detailFail": "Failed to load detail: {message}",
+        "label.id": "Payment ID",
+        "label.idempotency": "Idempotency Key",
+        "label.source": "Source Account",
+        "label.destination": "Destination Account",
+        "label.amount": "Amount",
+        "label.status": "Current Status",
+        "label.reference": "Reference",
+        "label.createdAt": "Created At",
+        "label.updatedAt": "Updated At",
+        "label.errorCode": "Error Code",
+        "label.errorMessage": "Error Message",
+        "label.initial": "Initial",
+        "flow.created": "Created",
+        "flow.validated": "Validated",
+        "flow.sent": "Sent",
+        "flow.current": "Current",
+        "tab.account": "Accounts",
+        "account.title": "Account Management",
+        "account.desc": "Create accounts, query account info, and deposit funds.",
+        "account.create.title": "Create Account",
+        "account.query.title": "Query Account",
+        "account.query.desc": "Enter ID or account name to query a single account, or leave both empty to list all.",
+        "account.query.byId": "Account ID",
+        "account.query.byAccountName": "Account Name",
+        "account.deposit.title": "Deposit",
+        "account.field.accountName": "Account Name",
+        "account.field.currency": "Currency",
+        "account.field.initialBalance": "Initial Balance",
+        "account.field.accountId": "Account ID",
+        "account.field.depositAmount": "Deposit Amount",
+        "account.btn.query": "Query",
+        "account.btn.create": "Create Account",
+        "account.btn.creating": "Creating...",
+        "account.btn.queryById": "Query by ID",
+        "account.btn.queryByAccountName": "Query by Account Name",
+        "account.btn.deposit": "Confirm Deposit",
+        "account.btn.depositing": "Depositing...",
+        "ph.accAccountName": "e.g. alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "Enter account ID",
+        "account.label.id": "Account ID",
+        "account.label.accountName": "Account Name",
+        "account.label.currency": "Currency",
+        "account.label.balance": "Balance",
+        "account.label.createdAt": "Created At",
+        "account.label.updatedAt": "Updated At",
+        "account.empty": "No account queried yet",
+        "account.list.empty": "No account data",
+        "msg.accCreateOk": "Account created, ID: {id}",
+        "msg.accCreateFail": "Account creation failed: {message}",
+        "msg.accQueryFail": "Account query failed: {message}",
+        "msg.depositOk": "Deposit successful, Account ID: {id}, Balance: {balance}",
+        "msg.depositFail": "Deposit failed: {message}",
+        "msg.accInvalidId": "Please enter a valid account ID",
+        "msg.accAccountNameEmpty": "Please enter an account name"
+    }
+};
 
-/**
- * 页面初始化
- */
-document.addEventListener('DOMContentLoaded', function () {
-    initPageEvents();
-    showModule('create');
+document.addEventListener("DOMContentLoaded", () => {
+    bindEvents();
+    applyLocale();
     generateIdempotencyKey();
+    showTab("create");
 });
 
-/**
- * 初始化页面事件
- */
-function initPageEvents() {
-    // 导航菜单
-    document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = this.getAttribute('href');
-            showModule(target.substring(1));
-        });
+function bindEvents() {
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.addEventListener("click", () => showTab(button.dataset.tab));
     });
 
-    // 创建支付表单
-    document.getElementById('createForm').addEventListener('submit', handleCreatePayment);
-    document.getElementById('generateKeyBtn').addEventListener('click', generateIdempotencyKey);
-
-    // 列表查询
-    document.getElementById('queryBtn').addEventListener('click', handleListPayments);
-    document.getElementById('statusFilter').addEventListener('change', () => {
-        currentPage = 0;
-        handleListPayments();
+    document.getElementById("createForm").addEventListener("submit", handleCreatePayment);
+    document.getElementById("createForm").addEventListener("reset", () => {
+        window.setTimeout(generateIdempotencyKey, 0);
+        hideFeedback();
     });
-    document.getElementById('pageSize').addEventListener('change', () => {
-        currentPage = 0;
-        handleListPayments();
-    });
+    document.getElementById("generateKeyBtn").addEventListener("click", generateIdempotencyKey);
+    document.getElementById("fillDemoBtn").addEventListener("click", fillDemoData);
 
-    // 详情查询
-    document.getElementById('detailQueryBtn').addEventListener('click', handleGetDetail);
-    document.getElementById('detailPaymentId').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            handleGetDetail();
+    document.getElementById("queryBtn").addEventListener("click", () => loadPayments(true));
+    document.getElementById("statusFilter").addEventListener("change", () => {
+        state.status = document.getElementById("statusFilter").value;
+        state.page = 0;
+        loadPayments();
+    });
+    document.getElementById("pageSize").addEventListener("change", () => {
+        state.pageSize = Number(document.getElementById("pageSize").value);
+        state.page = 0;
+        loadPayments();
+    });
+    document.getElementById("quickRefreshBtn").addEventListener("click", () => loadPayments());
+    document.getElementById("languageToggleBtn").addEventListener("click", toggleLocale);
+
+    document.getElementById("detailQueryBtn").addEventListener("click", handleDetailQuery);
+    document.getElementById("detailPaymentId").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleDetailQuery();
         }
     });
+
+    // 账户管理事件
+    // 账户管理事件
+    document.getElementById("createAccountForm").addEventListener("submit", handleCreateAccount);
+    document.getElementById("queryAccountBtn").addEventListener("click", handleQueryAccount);
+    document.getElementById("queryAccountId").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("queryAccountAccountName").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("depositForm").addEventListener("submit", handleDeposit);
+
+    ["sourceAccount", "destinationAccount", "amount"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", updateCreateHint);
+    });
 }
 
-/**
- * 模块切换
- */
-function showModule(moduleName) {
-    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-    const targetModule = document.getElementById(moduleName);
-    if (targetModule) {
-        targetModule.classList.add('active');
+function showTab(tabName) {
+    state.activeTab = tabName;
+    document.querySelectorAll("[data-panel]").forEach((panel) => {
+        panel.classList.toggle("is-active", panel.id === tabName);
+    });
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.tab === tabName);
+    });
+
+    if (tabName === "list") {
+        loadPayments();
     }
-
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    document.querySelector(`nav a[href="#${moduleName}"]`)?.classList.add('active');
 }
 
-/**
- * 生成幂等键
- */
 function generateIdempotencyKey() {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 9);
-    const key = `payment-${timestamp}-${random}`;
-    document.getElementById('idempotencyKey').value = key;
+    const randomPart = Math.random().toString(36).slice(2, 10);
+    const key = `pay-${Date.now()}-${randomPart}`;
+    document.getElementById("idempotencyKey").value = key;
 }
 
-/**
- * 处理创建支付
- */
-async function handleCreatePayment(e) {
-    e.preventDefault();
+function toggleLocale() {
+    state.locale = state.locale === "zh" ? "en" : "zh";
+    localStorage.setItem("ui-locale", state.locale);
+    applyLocale();
+    updateCreateHint();
 
-    const sourceAccount = document.getElementById('sourceAccount').value.trim();
-    const destinationAccount = document.getElementById('destinationAccount').value.trim();
-    const amount = document.getElementById('amount').value.trim();
-    const currency = 'CNY';
-    const reference = document.getElementById('reference').value.trim();
-    const idempotencyKey = document.getElementById('idempotencyKey').value.trim();
+    const detailContent = document.getElementById("detailContent");
+    if (state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
+        detailContent.textContent = t("detail.empty");
+    }
+}
 
-    if (!sourceAccount || !destinationAccount || !amount) {
-        showResult('createResult', '请填写所有必需字段', 'error');
+function applyLocale() {
+    document.documentElement.lang = state.locale === "zh" ? "zh-CN" : "en";
+    document.title = t("app.title");
+
+    document.querySelectorAll("[data-i18n]").forEach((element) => {
+        element.textContent = t(element.dataset.i18n);
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+        element.setAttribute("placeholder", t(element.dataset.i18nPlaceholder));
+    });
+
+    const toggleBtn = document.getElementById("languageToggleBtn");
+    if (toggleBtn) {
+        toggleBtn.textContent = state.locale === "zh" ? "English" : "中文";
+    }
+
+    const detailContent = document.querySelector("[data-empty-text]");
+    if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
+        detailContent.textContent = t("detail.empty");
+    }
+
+    const accDetailContent = document.getElementById("accountDetailContent");
+    if (accDetailContent && accDetailContent.classList.contains("detail-grid--empty")) {
+        accDetailContent.textContent = t("account.empty");
+    }
+}
+
+function t(key, vars = {}) {
+    const dict = i18n[state.locale] || i18n.zh;
+    const text = dict[key] || i18n.zh[key] || key;
+    return Object.keys(vars).reduce((acc, name) => acc.replace(`{${name}}`, String(vars[name])), text);
+}
+
+function fillDemoData() {
+    document.getElementById("sourceAccount").value = `ACC${Math.floor(Math.random() * 900 + 100)}`;
+    document.getElementById("destinationAccount").value = `ACC${Math.floor(Math.random() * 900 + 100)}`;
+    document.getElementById("amount").value = (Math.random() * 9800 + 100).toFixed(2);
+    document.getElementById("reference").value = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
+    updateCreateHint();
+}
+
+async function handleCreatePayment(event) {
+    event.preventDefault();
+
+    const payload = collectCreatePayload();
+    const validationMessage = validateCreatePayload(payload);
+    if (validationMessage) {
+        showFeedback(validationMessage, "error");
+        showToast(validationMessage, "error");
         return;
     }
 
-    const paymentData = {
-        sourceAccount,
-        destinationAccount,
-        amount: parseFloat(amount),
-        currency,
-        reference: reference || undefined
-    };
+    const submitBtn = document.getElementById("submitCreateBtn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = t("btn.creating");
 
-    try {
-        const result = await PaymentAPI.createPayment(paymentData, idempotencyKey);
+    const result = await PaymentAPI.createPayment(payload, document.getElementById("idempotencyKey").value);
 
-        if (result.code === 'SUCCESS') {
-        console.log('创建支付结果:', result.status, result.data);
-            const isNew =  result.status === 201;
-            const message = isNew
-                ? `✓ 支付创建成功! ID: ${result.data.id}`
-                : `✓ 重复请求，返回已存在的支付! ID: ${result.data.id}`;
+    submitBtn.disabled = false;
+    submitBtn.textContent = t("btn.create");
 
-            showResult('createResult', message, 'success');
-            showPaymentDetail(result.data);
+    if (result.ok) {
+        const isCreated = result.status === 201;
+        const message = isCreated ? t("msg.createOk", { id: result.data.id }) : t("msg.createDup", { id: result.data.id });
+        showFeedback(message, "success");
+        showToast(message, "success");
 
-            // 重置表单
-            document.getElementById('createForm').reset();
-            generateIdempotencyKey();
-
-        } else if (result.code === 'CONFLICT') {
-            showResult('createResult', `✗ 幂等键冲突: ${result.data.message}`, 'error');
-        } else {
-            showResult('createResult', `✗ 创建失败: ${result.data.message}`, 'error');
-        }
-    } catch (err) {
-        showResult('createResult', `✗ 请求失败: ${err.message}`, 'error');
-    }
-}
-
-/**
- * 处理列表查询
- */
-async function handleListPayments() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const pageSizeSelect = document.getElementById('pageSize').value;
-    currentPageSize = parseInt(pageSizeSelect);
-    currentStatus = statusFilter;
-
-    const result = await PaymentAPI.listPayments(currentPage, currentPageSize, statusFilter);
-
-    if (result.code === 'SUCCESS') {
-        renderPaymentTable(result.data.content);
-        renderPagination(result.data.totalPages, currentPage);
+        state.selectedPaymentId = result.data.id;
+        document.getElementById("createForm").reset();
+        generateIdempotencyKey();
+        updateCreateHint();
     } else {
-        showAlert('paymentTable', `查询失败: ${result.data.message}`, 'error');
+        const message = `${result.error.errorCode}: ${result.error.message}`;
+        showFeedback(message, "error");
+        showToast(message, "error");
     }
 }
 
-/**
- * 渲染支付表格
- */
-function renderPaymentTable(payments) {
-    const tbody = document.querySelector('#paymentTable tbody');
-    tbody.innerHTML = '';
+function collectCreatePayload() {
+    return {
+        sourceAccount: document.getElementById("sourceAccount").value.trim(),
+        destinationAccount: document.getElementById("destinationAccount").value.trim(),
+        amount: Number(document.getElementById("amount").value),
+        currency: "CNY",
+        reference: document.getElementById("reference").value.trim() || undefined
+    };
+}
 
-    if (!payments || payments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无数据</td></tr>';
+function validateCreatePayload(payload) {
+    if (!payload.sourceAccount || !payload.destinationAccount || !payload.amount) {
+        return t("msg.requireFields");
+    }
+    if (payload.sourceAccount === payload.destinationAccount) {
+        return t("msg.accountSame");
+    }
+    if (Number.isNaN(payload.amount) || payload.amount <= 0) {
+        return t("msg.amountInvalid");
+    }
+    return "";
+}
+
+function updateCreateHint() {
+    const payload = collectCreatePayload();
+    const hint = document.getElementById("createFormHint");
+    const error = validateCreatePayload(payload);
+    hint.textContent = error || t("hint.valid");
+    hint.style.color = error ? "#d14343" : "#15803d";
+}
+
+async function loadPayments(force = false) {
+    if (!force && state.activeTab !== "list") {
         return;
     }
 
-    payments.forEach(payment => {
-        const row = document.createElement('tr');
+    state.status = document.getElementById("statusFilter").value;
+    state.pageSize = Number(document.getElementById("pageSize").value);
+
+    renderTableLoading();
+
+    const result = await PaymentAPI.listPayments({
+        page: state.page,
+        size: state.pageSize,
+        status: state.status
+    });
+
+    if (!result.ok) {
+        renderTableEmpty(t("msg.queryFail", { message: result.error.message }));
+        showToast(t("msg.listFail", { message: result.error.message }), "error");
+        return;
+    }
+
+    renderPaymentRows(result.data.content || []);
+    renderPagination(result.data.totalPages || 0, state.page);
+}
+
+function renderTableLoading() {
+    const tbody = document.getElementById("paymentTableBody");
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">${escapeHtml(t("list.loading"))}</td></tr>`;
+}
+
+function renderTableEmpty(message) {
+    const tbody = document.getElementById("paymentTableBody");
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">${escapeHtml(message)}</td></tr>`;
+    document.getElementById("pagination").innerHTML = "";
+}
+
+function renderPaymentRows(payments) {
+    const tbody = document.getElementById("paymentTableBody");
+    tbody.innerHTML = "";
+
+    if (!payments.length) {
+        renderTableEmpty(t("list.empty"));
+        return;
+    }
+
+    payments.forEach((payment) => {
+        const row = document.createElement("tr");
         row.innerHTML = `
-            <td>${payment.id}</td>
-            <td>${payment.idempotencyKey}</td>
-            <td>${payment.sourceAccount}</td>
-            <td>${payment.destinationAccount}</td>
-            <td>${payment.amount}</td>
-            <td><span class="status ${payment.status}">${getStatusLabel(payment.status)}</span></td>
+            <td>#${payment.id}</td>
+            <td>${escapeHtml(payment.sourceAccount || "-")}</td>
+            <td>${escapeHtml(payment.destinationAccount || "-")}</td>
+            <td>${formatAmount(payment.amount)} ${escapeHtml(payment.currency || "CNY")}</td>
+            <td><span class="status-pill status-${escapeHtml(payment.status)}">${escapeHtml(payment.status)}</span></td>
             <td>${formatDateTime(payment.createdAt)}</td>
-            <td>
-                <button class="btn btn-outline" onclick="loadPaymentDetail(${payment.id})">详情</button>
-            </td>
+            <td><button class="btn btn--ghost" type="button" data-id="${payment.id}">${escapeHtml(t("btn.detail"))}</button></td>
         `;
+
+        row.addEventListener("click", () => openDetail(payment.id));
+        const detailBtn = row.querySelector("button");
+        detailBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            openDetail(payment.id);
+        });
+
         tbody.appendChild(row);
     });
 }
 
-/**
- * 渲染分页
- */
 function renderPagination(totalPages, currentPage) {
-    const paginationDiv = document.getElementById('pagination');
-    paginationDiv.innerHTML = '';
+    const container = document.getElementById("pagination");
+    container.innerHTML = "";
 
-    if (totalPages <= 1) return;
-
-    // 上一页
-    if (currentPage > 0) {
-        const prevBtn = document.createElement('button');
-        prevBtn.textContent = '上一页';
-        prevBtn.onclick = () => {
-            currentPage--;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(prevBtn);
-    }
-
-    // 页码
-    for (let i = 0; i < totalPages; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = (i + 1).toString();
-        if (i === currentPage) {
-            pageBtn.classList.add('active');
-        }
-        pageBtn.onclick = () => {
-            currentPage = i;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(pageBtn);
-    }
-
-    // 下一页
-    if (currentPage < totalPages - 1) {
-        const nextBtn = document.createElement('button');
-        nextBtn.textContent = '下一页';
-        nextBtn.onclick = () => {
-            currentPage++;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(nextBtn);
-    }
-}
-
-/**
- * 处理详情查询
- */
-async function handleGetDetail() {
-    const paymentIdInput = document.getElementById('detailPaymentId');
-    const paymentId = parseInt(paymentIdInput.value.trim());
-
-    if (!paymentId) {
-        showAlert('detailContent', '请输入支付ID', 'error');
+    if (totalPages <= 1) {
         return;
     }
 
-    await loadPaymentDetail(paymentId);
+    const pages = buildPageItems(totalPages, currentPage);
+
+    pages.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.className = `page-btn${item === currentPage ? " is-active" : ""}`;
+        btn.type = "button";
+        btn.textContent = String(item + 1);
+        btn.addEventListener("click", () => {
+            state.page = item;
+            loadPayments();
+        });
+        container.appendChild(btn);
+    });
 }
 
-/**
- * 加载支付详情
- */
-async function loadPaymentDetail(paymentId) {
-    const result = await PaymentAPI.getPaymentDetail(paymentId);
+function buildPageItems(totalPages, currentPage) {
+    const start = Math.max(0, currentPage - 2);
+    const end = Math.min(totalPages - 1, currentPage + 2);
+    const items = [];
+    for (let i = start; i <= end; i++) {
+        items.push(i);
+    }
+    return items;
+}
 
-    if (result.code === 'SUCCESS') {
-        showPaymentDetail(result.data);
-        showModule('detail');
-        document.getElementById('detailPaymentId').value = paymentId;
+function handleDetailQuery() {
+    const raw = document.getElementById("detailPaymentId").value;
+    const id = Number(raw);
+    if (!id || id < 1) {
+        showToast(t("detail.invalidId"), "error");
+        return;
+    }
+    openDetail(id);
+}
 
-        // 加载历史记录
-        const historyResult = await PaymentAPI.getPaymentHistory(paymentId);
-        if (historyResult.code === 'SUCCESS') {
-            renderPaymentHistory(historyResult.data);
+async function openDetail(paymentId) {
+    state.selectedPaymentId = paymentId;
+    showTab("detail");
+    document.getElementById("detailPaymentId").value = String(paymentId);
+
+    const detailContent = document.getElementById("detailContent");
+    detailContent.className = "detail-grid detail-grid--empty";
+    detailContent.textContent = t("detail.loading");
+
+    const [detailResult, historyResult] = await Promise.all([
+        PaymentAPI.getPaymentDetail(paymentId),
+        PaymentAPI.getPaymentHistory(paymentId)
+    ]);
+
+    if (!detailResult.ok) {
+        detailContent.textContent = t("msg.queryFail", { message: detailResult.error.message });
+        showToast(t("msg.detailFail", { message: detailResult.error.message }), "error");
+        document.getElementById("statusFlowSection").hidden = true;
+        document.getElementById("historySection").hidden = true;
+        return;
+    }
+
+    const historyRecords = historyResult.ok ? historyResult.data : [];
+    renderDetail(detailResult.data);
+    renderStatusFlow(detailResult.data, historyRecords);
+    renderHistory(historyRecords);
+}
+
+function renderStatusFlow(payment, records) {
+    const section = document.getElementById("statusFlowSection");
+    const container = document.getElementById("statusFlow");
+    if (!payment) {
+        section.hidden = true;
+        container.innerHTML = "";
+        return;
+    }
+
+    const statusOrder = ["CREATED", "VALIDATED", "SENT"];
+    const labels = [t("flow.created"), t("flow.validated"), t("flow.sent")];
+
+    const reached = new Set();
+    reached.add(payment.status);
+    (records || []).forEach((record) => {
+        if (record && record.toStatus) {
+            reached.add(record.toStatus);
         }
+    });
 
-        // 显示操作按钮
-        renderOperationButtons(result.data);
+    const currentIndex = statusOrder.indexOf(payment.status);
+    const maxReachedIndex = Math.max(
+        ...statusOrder.map((status, idx) => (reached.has(status) ? idx : -1))
+    );
+
+    const stepClass = (idx) => {
+        if (idx === currentIndex) {
+            return "flow-step is-current";
+        }
+        if (idx <= maxReachedIndex) {
+            return "flow-step is-done";
+        }
+        return "flow-step";
+    };
+
+    const linkClass = (idx) => {
+        const active = idx < Math.max(currentIndex, maxReachedIndex);
+        return `flow-link${active ? " is-active" : ""}`;
+    };
+
+    container.innerHTML = `
+        <div class="${stepClass(0)}">${escapeHtml(labels[0])}</div>
+        <div class="${linkClass(0)}" aria-hidden="true"></div>
+        <div class="${stepClass(1)}">${escapeHtml(labels[1])}</div>
+        <div class="${linkClass(1)}" aria-hidden="true"></div>
+        <div class="${stepClass(2)}">${escapeHtml(labels[2])}</div>
+    `;
+
+    const terminal = document.createElement("div");
+    terminal.className = "flow-terminal";
+    terminal.innerHTML = `${escapeHtml(t("flow.current"))}: <span class="status-pill status-${escapeHtml(payment.status || "UNKNOWN")}">${escapeHtml(payment.status || "-")}</span>`;
+    container.appendChild(terminal);
+    section.hidden = false;
+}
+
+function renderDetail(payment) {
+    const detailContent = document.getElementById("detailContent");
+    detailContent.className = "detail-grid";
+
+    const fields = [
+        [t("label.id"), `#${payment.id}`],
+        [t("label.idempotency"), payment.idempotencyKey || "-"],
+        [t("label.source"), payment.sourceAccount || "-"],
+        [t("label.destination"), payment.destinationAccount || "-"],
+        [t("label.amount"), `${formatAmount(payment.amount)} ${payment.currency || "CNY"}`],
+        [t("label.status"), `<span class="status-pill status-${escapeHtml(payment.status)}">${escapeHtml(payment.status)}</span>`],
+        [t("label.reference"), payment.reference || "-"],
+        [t("label.createdAt"), formatDateTime(payment.createdAt)],
+        [t("label.updatedAt"), formatDateTime(payment.updatedAt)]
+    ];
+
+    if (payment.errorCode) {
+        fields.push([t("label.errorCode"), payment.errorCode]);
+    }
+    if (payment.errorMessage) {
+        fields.push([t("label.errorMessage"), payment.errorMessage]);
+    }
+
+    detailContent.innerHTML = fields
+        .map(([label, value]) => `
+            <article class="detail-item">
+                <div class="detail-item__label">${escapeHtml(label)}</div>
+                <div class="detail-item__value">${value}</div>
+            </article>
+        `)
+        .join("");
+}
+
+function renderHistory(records) {
+    const section = document.getElementById("historySection");
+    const timeline = document.getElementById("historyTimeline");
+
+    if (!records || !records.length) {
+        section.hidden = true;
+        timeline.innerHTML = "";
+        return;
+    }
+
+    section.hidden = false;
+    timeline.innerHTML = records
+        .map((record) => `
+            <article class="timeline-item">
+                <div class="timeline-meta">${formatDateTime(record.createdAt)} · <span class="timeline-trigger">${escapeHtml(record.triggeredBy || "SYSTEM")}</span></div>
+                <div class="timeline-flow">
+                    <span class="status-pill status-${escapeHtml(record.fromStatus || "INITIAL")}">${escapeHtml(record.fromStatus || t("label.initial"))}</span>
+                    <span class="timeline-arrow" aria-hidden="true">&rarr;</span>
+                    <span class="status-pill status-${escapeHtml(record.toStatus || "UNKNOWN")}">${escapeHtml(record.toStatus || "-")}</span>
+                </div>
+                <div class="timeline-reason">${escapeHtml(record.reason || t("detail.noReason"))}</div>
+            </article>
+        `)
+        .join("");
+}
+
+function showFeedback(message, type) {
+    const el = document.getElementById("createResult");
+    el.className = `feedback is-show feedback--${type === "success" ? "success" : "error"}`;
+    el.textContent = message;
+}
+
+function hideFeedback() {
+    const el = document.getElementById("createResult");
+    el.className = "feedback";
+    el.textContent = "";
+}
+
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type === "error" ? "error" : "success"}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3200);
+}
+
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) {
+        return "-";
+    }
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString(state.locale === "zh" ? "zh-CN" : "en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+}
+
+function formatAmount(amount) {
+    const value = Number(amount);
+    if (Number.isNaN(value)) {
+        return "0.00";
+    }
+    return value.toFixed(2);
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+// ─── 账户管理 ─────────────────────────────────────────────────────────────────
+
+async function handleCreateAccount(event) {
+    event.preventDefault();
+    const accountName = document.getElementById("accAccountName").value.trim();
+    const currency = document.getElementById("accCurrency").value.trim() || "CNY";
+    const initialBalance = Number(document.getElementById("accInitialBalance").value);
+
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+
+    const btn = document.getElementById("submitCreateAccountBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.creating");
+
+    const result = await AccountAPI.createAccount({ accountName, currency, initialBalance });
+
+    btn.disabled = false;
+    btn.textContent = t("account.btn.create");
+
+    const feedback = document.getElementById("createAccountResult");
+    if (result.ok) {
+        const msg = t("msg.accCreateOk", { id: result.data.id });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("createAccountForm").reset();
     } else {
-        showAlert('detailContent', `查询失败: ${result.data.message}`, 'error');
+        const msg = t("msg.accCreateFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
     }
 }
 
-/**
- * 显示支付详情
- */
-function showPaymentDetail(payment) {
-    const detailContent = document.getElementById('detailContent');
-    detailContent.innerHTML = `
-        <div class="detail-content">
-            <div class="detail-item">
-                <span class="detail-label">支付ID:</span>
-                <span class="detail-value">${payment.id}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">幂等键:</span>
-                <span class="detail-value">${payment.idempotencyKey}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">付款账户:</span>
-                <span class="detail-value">${payment.sourceAccount}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">收款账户:</span>
-                <span class="detail-value">${payment.destinationAccount}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">金额:</span>
-                <span class="detail-value">${payment.amount} ${payment.currency}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">状态:</span>
-                <span class="detail-value"><span class="status ${payment.status}">${getStatusLabel(payment.status)}</span></span>
-            </div>
-            ${payment.errorCode ? `
-            <div class="detail-item">
-                <span class="detail-label">错误码:</span>
-                <span class="detail-value">${payment.errorCode}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">错误信息:</span>
-                <span class="detail-value">${payment.errorMessage}</span>
-            </div>
-            ` : ''}
-            <div class="detail-item">
-                <span class="detail-label">参考号:</span>
-                <span class="detail-value">${payment.reference || '-'}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">创建时间:</span>
-                <span class="detail-value">${formatDateTime(payment.createdAt)}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">更新时间:</span>
-                <span class="detail-value">${formatDateTime(payment.updatedAt)}</span>
-            </div>
+async function handleQueryAccountById() {
+    const raw = document.getElementById("queryAccountId").value;
+    const id = Number(raw);
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountById(id);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccountByAccountName() {
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountByAccountName(accountName);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccount() {
+    const idRaw = document.getElementById("queryAccountId").value.trim();
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    const id = Number(idRaw);
+
+    if (idRaw && id >= 1) {
+        const result = await AccountAPI.getAccountById(id);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else if (accountName) {
+        const result = await AccountAPI.getAccountByAccountName(accountName);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else {
+        const result = await AccountAPI.getAllAccounts();
+        hideAccountDetail();
+        renderAccountList(result);
+    }
+}
+
+function hideAccountList() {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "none";
+    listEl.innerHTML = "";
+}
+
+function hideAccountDetail() {
+    const detailEl = document.getElementById("accountDetailContent");
+    detailEl.className = "detail-grid detail-grid--empty";
+    detailEl.textContent = "";
+    detailEl.style.display = "none";
+}
+
+function renderAccountList(result) {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "block";
+    if (!result.ok) {
+        listEl.innerHTML = `<p class="feedback feedback--error is-show">${escapeHtml(t("msg.accQueryFail", { message: result.error.message }))}</p>`;
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const accounts = result.data;
+    if (!accounts || accounts.length === 0) {
+        listEl.innerHTML = `<p class="empty" style="padding:1rem 0">${escapeHtml(t("account.list.empty"))}</p>`;
+        return;
+    }
+    listEl.innerHTML = `
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>${escapeHtml(t("account.label.accountName"))}</th>
+                        <th>${escapeHtml(t("account.label.currency"))}</th>
+                        <th>${escapeHtml(t("account.label.balance"))}</th>
+                        <th>${escapeHtml(t("account.label.createdAt"))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${accounts.map((acc) => `
+                        <tr>
+                            <td>#${acc.id}</td>
+                            <td>${escapeHtml(acc.accountName || "-")}</td>
+                            <td>${escapeHtml(acc.currency || "-")}</td>
+                            <td>${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}</td>
+                            <td>${formatDateTime(acc.createdAt)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
         </div>
     `;
 }
 
-/**
- * 渲染支付历史
- */
-function renderPaymentHistory(histories) {
-    const historySection = document.getElementById('historySection');
-    const timeline = document.getElementById('historyTimeline');
+function renderAccountDetail(result) {
+    const el = document.getElementById("accountDetailContent");
+    el.style.display = "";
+    if (!result.ok) {
+        el.className = "detail-grid detail-grid--empty";
+        el.textContent = t("msg.accQueryFail", { message: result.error.message });
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const acc = result.data;
+    el.className = "detail-grid";
+    const fields = [
+        [t("account.label.id"), `#${acc.id}`],
+        [t("account.label.accountName"), escapeHtml(acc.accountName || "-")],
+        [t("account.label.currency"), escapeHtml(acc.currency || "-")],
+        [t("account.label.balance"), `${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}`],
+        [t("account.label.createdAt"), formatDateTime(acc.createdAt)],
+        [t("account.label.updatedAt"), formatDateTime(acc.updatedAt)]
+    ];
+    el.innerHTML = fields
+        .map(([label, value]) => `
+            <article class="detail-item">
+                <div class="detail-item__label">${escapeHtml(label)}</div>
+                <div class="detail-item__value">${value}</div>
+            </article>
+        `)
+        .join("");
+}
 
-    timeline.innerHTML = '';
+async function handleDeposit(event) {
+    event.preventDefault();
+    const id = Number(document.getElementById("depositAccountId").value);
+    const amount = Number(document.getElementById("depositAmount").value);
 
-    if (!histories || histories.length === 0) {
-        historySection.style.display = 'none';
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    if (!amount || amount <= 0) {
+        showToast(t("msg.amountInvalid"), "error");
         return;
     }
 
-    historySection.style.display = 'block';
+    const btn = document.getElementById("submitDepositBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.depositing");
 
-    histories.forEach(record => {
-        const item = document.createElement('div');
-        item.className = 'timeline-item';
-        item.innerHTML = `
-            <div class="timeline-item-time">${formatDateTime(record.createdAt)}</div>
-            <div class="timeline-item-status">
-                ${record.fromStatus || '初始'} → ${record.toStatus}
-            </div>
-            <div class="timeline-item-reason">${record.reason || '-'}</div>
-            <div class="timeline-item-triggered">触发方: ${record.triggeredBy}</div>
-        `;
-        timeline.appendChild(item);
-    });
-}
+    const result = await AccountAPI.deposit(id, amount);
 
-/**
- * 渲染操作按钮
- */
-function renderOperationButtons(payment) {
-    const operationsSection = document.getElementById('operationsSection');
-    const operationButtons = document.getElementById('operationButtons');
+    btn.disabled = false;
+    btn.textContent = t("account.btn.deposit");
 
-    operationButtons.innerHTML = '';
-
-    const buttons = [];
-
-    // 根据当前状态显示可用的操作按钮
-    if (payment.status === 'CREATED') {
-        buttons.push({
-            label: 'CREATED → VALIDATED',
-            action: () => updatePaymentStatus(payment.id, 'validatePayment')
-        });
-    }
-
-    if (payment.status === 'VALIDATED') {
-        buttons.push({
-            label: 'VALIDATED → SENT',
-            action: () => updatePaymentStatus(payment.id, 'sendPayment')
-        });
-    }
-
-    if (payment.status === 'SENT') {
-        buttons.push({
-            label: 'SENT → COMPLETED',
-            action: () => updatePaymentStatus(payment.id, 'completePayment')
-        });
-        buttons.push({
-            label: 'SENT → FAILED',
-            action: () => updatePaymentStatus(payment.id, 'failPayment')
-        });
-    }
-
-    // 如果还不是终态，允许直接标记为失败
-    if (payment.status !== 'COMPLETED' && payment.status !== 'FAILED') {
-        buttons.push({
-            label: '标记为失败',
-            action: () => updatePaymentStatus(payment.id, 'failPayment'),
-            className: 'btn-danger'
-        });
-    }
-
-    // 刷新按钮
-    buttons.push({
-        label: '刷新',
-        action: () => loadPaymentDetail(payment.id)
-    });
-
-    buttons.forEach(btn => {
-        const button = document.createElement('button');
-        button.className = `btn ${btn.className || 'btn-primary'} operation-btn`;
-        button.textContent = btn.label;
-        button.onclick = btn.action;
-        operationButtons.appendChild(button);
-    });
-
-    if (buttons.length > 0) {
-        operationsSection.style.display = 'block';
-    }
-}
-
-/**
- * 更新支付状态
- */
-async function updatePaymentStatus(paymentId, action) {
-    let result;
-
-    switch (action) {
-        case 'validatePayment':
-            result = await PaymentAPI.validatePayment(paymentId);
-            break;
-        case 'sendPayment':
-            result = await PaymentAPI.sendPayment(paymentId);
-            break;
-        case 'completePayment':
-            result = await PaymentAPI.completePayment(paymentId);
-            break;
-        case 'failPayment':
-            result = await PaymentAPI.failPayment(paymentId);
-            break;
-        default:
-            return;
-    }
-
-    if (result.code === 'SUCCESS') {
-        showAlert('detailContent', '✓ 状态更新成功', 'success');
-        await loadPaymentDetail(paymentId);
+    const feedback = document.getElementById("depositResult");
+    if (result.ok) {
+        const msg = t("msg.depositOk", { id: result.data.id, balance: formatAmount(result.data.balance) });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("depositForm").reset();
     } else {
-        showAlert('detailContent', `✗ 更新失败: ${result.data.message}`, 'error');
+        const msg = t("msg.depositFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
     }
 }
 
-/**
- * 显示提示信息
- */
-function showResult(elementId, message, type) {
-    const resultDiv = document.getElementById(elementId);
-    resultDiv.textContent = message;
-    resultDiv.className = `result show ${type}`;
-
-    setTimeout(() => {
-        resultDiv.classList.remove('show');
-    }, 3000);
-}
-
-/**
- * 显示警告信息
- */
-function showAlert(elementId, message, type) {
-    const container = document.getElementById(elementId);
-    if (container) {
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
-        alert.textContent = message;
-        container.insertBefore(alert, container.firstChild);
-
-        setTimeout(() => {
-            alert.remove();
-        }, 5000);
-    }
-}
-
-/**
- * 格式化日期时间
- */
-function formatDateTime(dateTimeStr) {
-    if (!dateTimeStr) return '-';
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-/**
- * 获取状态标签
- */
-function getStatusLabel(status) {
-    const labels = {
-        'CREATED': '已创建',
-        'VALIDATED': '已验证',
-        'SENT': '已发送',
-        'COMPLETED': '已完成',
-        'FAILED': '失败'
-    };
-    return labels[status] || status;
-}

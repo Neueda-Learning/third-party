@@ -1,7 +1,9 @@
 package com.team.payment.service;
 
+import com.team.payment.dao.AccountDao;
 import com.team.payment.dao.PaymentDao;
 import com.team.payment.dao.PaymentHistoryDao;
+import com.team.payment.entity.Account;
 import com.team.payment.dto.CreatePaymentRequest;
 import com.team.payment.dto.HistoryResponse;
 import com.team.payment.dto.PaymentListResponse;
@@ -42,6 +44,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private PaymentHistoryDao paymentHistoryDao;
+
+    @Autowired
+    private AccountDao accountDao;
 
 
     @Override
@@ -223,6 +228,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .idempotencyKey(idempotencyKey)
                 .sourceAccount(request.getSourceAccount().trim())
                 .destinationAccount(request.getDestinationAccount().trim())
+                .fromAccountId(request.getFromAccountId())
+                .toAccountId(request.getToAccountId())
+                .exchangeRate(request.getExchangeRate())
                 .amount(request.getAmount())
                 .currency(normalizeCurrency(request.getCurrency()))
                 .status(PaymentStatus.CREATED.name())
@@ -263,6 +271,29 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponse validatePayment(Long paymentId) {
         Payment payment = getRequiredPayment(paymentId);
+
+        // 校验账户存在 + 余额充足
+        if (payment.getFromAccountId() != null && payment.getToAccountId() != null) {
+            Account fromAccount = accountDao.findById(payment.getFromAccountId());
+            Account toAccount   = accountDao.findById(payment.getToAccountId());
+
+            if (fromAccount == null) {
+                return failPaymentInternal(paymentId, "ACCOUNT_NOT_FOUND", "付款账户不存在: " + payment.getFromAccountId(), "SYSTEM");
+            }
+            if (toAccount == null) {
+                return failPaymentInternal(paymentId, "ACCOUNT_NOT_FOUND", "收款账户不存在: " + payment.getToAccountId(), "SYSTEM");
+            }
+            // 跨币种时汇率必填
+            if (!fromAccount.getCurrency().equals(toAccount.getCurrency()) && payment.getExchangeRate() == null) {
+                return failPaymentInternal(paymentId, "MISSING_EXCHANGE_RATE", "跨币种转账必须提供汇率", "SYSTEM");
+            }
+            // 校验余额
+            if (fromAccount.getBalance().compareTo(payment.getAmount()) < 0) {
+                return failPaymentInternal(paymentId, "INSUFFICIENT_BALANCE",
+                        "余额不足，当前余额: " + fromAccount.getBalance(), "SYSTEM");
+            }
+        }
+
         return advanceOrFailByRatio(
                 payment,
                 PaymentStatus.CREATED,
@@ -275,8 +306,53 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentResponse sendPayment(Long paymentId) {
         Payment payment = getRequiredPayment(paymentId);
+
+        // 执行余额扣款和入账（事务保证原子性）
+        if (payment.getFromAccountId() != null && payment.getToAccountId() != null) {
+            // 固定顺序加锁（小ID先锁），防止死锁
+            Long firstId  = Math.min(payment.getFromAccountId(), payment.getToAccountId());
+            Long secondId = Math.max(payment.getFromAccountId(), payment.getToAccountId());
+
+            Account first  = accountDao.findByIdForUpdate(firstId);
+            Account second = accountDao.findByIdForUpdate(secondId);
+
+            Account fromAccount = payment.getFromAccountId().equals(firstId) ? first : second;
+            Account toAccount   = payment.getToAccountId().equals(firstId)   ? first : second;
+
+            if (fromAccount == null || toAccount == null) {
+                return failPaymentInternal(paymentId, "ACCOUNT_NOT_FOUND", "账户不存在", "SYSTEM");
+            }
+
+            // 并发二次校验余额
+            if (fromAccount.getBalance().compareTo(payment.getAmount()) < 0) {
+                return failPaymentInternal(paymentId, "INSUFFICIENT_BALANCE",
+                        "余额不足（并发校验），当前余额: " + fromAccount.getBalance(), "SYSTEM");
+            }
+
+            // 计算收款金额：跨币种乘以汇率，同币种原额
+            BigDecimal receiveAmount = payment.getExchangeRate() != null
+                    ? payment.getAmount().multiply(payment.getExchangeRate())
+                    : payment.getAmount();
+
+            // 扣款（乐观锁）
+            int updated = accountDao.updateBalance(fromAccount.getId(),
+                    payment.getAmount().negate(), fromAccount.getVersion());
+            if (updated == 0) {
+                return failPaymentInternal(paymentId, "CONCURRENT_UPDATE",
+                        "账户并发更新冲突，请重试", "SYSTEM");
+            }
+            // 入账（乐观锁）
+            int updated2 = accountDao.updateBalance(toAccount.getId(),
+                    receiveAmount, toAccount.getVersion());
+            if (updated2 == 0) {
+                return failPaymentInternal(paymentId, "CONCURRENT_UPDATE",
+                        "收款账户并发更新冲突，请重试", "SYSTEM");
+            }
+        }
+
         return advanceOrFailByRatio(
                 payment,
                 PaymentStatus.VALIDATED,

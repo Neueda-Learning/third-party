@@ -37,6 +37,9 @@ public class PaymentDao {
             .idempotencyKey(rs.getString("idempotency_key"))
             .sourceAccount(rs.getString("source_account"))
             .destinationAccount(rs.getString("destination_account"))
+            .fromAccountId(rs.getObject("from_account_id", Long.class))
+            .toAccountId(rs.getObject("to_account_id", Long.class))
+            .exchangeRate(rs.getBigDecimal("exchange_rate"))
             .amount(rs.getBigDecimal("amount"))
             .currency(rs.getString("currency"))
             .status(rs.getString("status"))
@@ -53,10 +56,10 @@ public class PaymentDao {
      */
     @Transactional
     public Payment create(Payment payment) {
-        System.out.println("Creating payment in DAO: " + payment);
         String sql = "INSERT INTO payments (idempotency_key, source_account, destination_account, " +
+                     "from_account_id, to_account_id, exchange_rate, " +
                      "amount, currency, status, reference, version, created_at, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
@@ -64,13 +67,16 @@ public class PaymentDao {
             ps.setString(1, payment.getIdempotencyKey());
             ps.setString(2, payment.getSourceAccount());
             ps.setString(3, payment.getDestinationAccount());
-            ps.setBigDecimal(4, payment.getAmount());
-            ps.setString(5, payment.getCurrency());
-            ps.setString(6, payment.getStatus());
-            ps.setString(7, payment.getReference());
-            ps.setLong(8, 0L);
-            ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setObject(4, payment.getFromAccountId());
+            ps.setObject(5, payment.getToAccountId());
+            ps.setBigDecimal(6, payment.getExchangeRate());
+            ps.setBigDecimal(7, payment.getAmount());
+            ps.setString(8, payment.getCurrency());
+            ps.setString(9, payment.getStatus());
+            ps.setString(10, payment.getReference());
+            ps.setLong(11, 0L);
+            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
             return ps;
         }, keyHolder);
 

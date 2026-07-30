@@ -28,6 +28,7 @@
             <button class="tab-btn is-active" data-tab="create" type="button" data-i18n="tab.create">创建支付</button>
             <button class="tab-btn" data-tab="list" type="button" data-i18n="tab.list">支付列表</button>
             <button class="tab-btn" data-tab="detail" type="button" data-i18n="tab.detail">支付详情</button>
+            <button class="tab-btn" data-tab="account" type="button" data-i18n="tab.account">账户管理</button>
             <button class="tab-btn tab-btn--quiet" id="quickRefreshBtn" type="button" data-i18n="tab.refresh">刷新当前列表</button>
         </aside>
 
@@ -150,6 +151,77 @@
                     <h3 data-i18n="detail.history">状态变更历史</h3>
                     <div id="historyTimeline"></div>
                 </section>
+            </section>
+
+            <!-- ══════════════ 账户管理 ══════════════ -->
+            <section id="account" class="panel" data-panel>
+                <div class="panel__head">
+                    <h2 data-i18n="account.title">账户管理</h2>
+                    <p data-i18n="account.desc">创建账户、查询账户信息、为账户充值。</p>
+                </div>
+
+                <!-- 创建账户 -->
+                <div class="sub-card">
+                    <h3 data-i18n="account.create.title">创建账户</h3>
+                    <form id="createAccountForm" class="form-grid" novalidate>
+                        <label class="field">
+                            <span data-i18n="account.field.accountName">账户名</span>
+                            <input id="accAccountName" name="accountName" type="text" placeholder="例如 alice" data-i18n-placeholder="ph.accAccountName" maxlength="64" required>
+                        </label>
+                        <label class="field">
+                            <span data-i18n="account.field.currency">币种</span>
+                            <input id="accCurrency" name="currency" type="text" placeholder="CNY" data-i18n-placeholder="ph.accCurrency" maxlength="8" required>
+                        </label>
+                        <label class="field field--full">
+                            <span data-i18n="account.field.initialBalance">初始余额</span>
+                            <input id="accInitialBalance" name="initialBalance" type="number" step="0.01" min="0" placeholder="0.00" data-i18n-placeholder="ph.accInitialBalance" required>
+                        </label>
+                        <div class="actions field--full">
+                            <button class="btn btn--primary" id="submitCreateAccountBtn" type="submit" data-i18n="account.btn.create">创建账户</button>
+                            <button class="btn btn--ghost" type="reset" data-i18n="btn.reset">重置</button>
+                        </div>
+                    </form>
+                    <div id="createAccountResult" class="feedback"></div>
+                </div>
+
+                <!-- 查询账户 -->
+                <div class="sub-card">
+                    <h3 data-i18n="account.query.title">查询账户</h3>
+                    <p style="margin-bottom:0.75rem;color:#666;font-size:0.875rem" data-i18n="account.query.desc">填写 ID 或账户名查询单个账户，两者均不填则查询全部。</p>
+                    <div class="toolbar">
+                        <label>
+                            <span data-i18n="account.query.byId">账户 ID</span>
+                            <input type="number" id="queryAccountId" min="1" placeholder="输入账户 ID" data-i18n-placeholder="ph.accId">
+                        </label>
+                        <label>
+                            <span data-i18n="account.query.byAccountName">账户名</span>
+                            <input type="text" id="queryAccountAccountName" placeholder="输入账户名" data-i18n-placeholder="ph.accAccountName" maxlength="64">
+                        </label>
+                        <button class="btn btn--primary" id="queryAccountBtn" type="button" data-i18n="account.btn.query">查询</button>
+                    </div>
+                    <div id="accountListContent" style="margin-top:1rem;display:none;"></div>
+                    <div id="accountDetailContent" class="detail-grid detail-grid--empty" style="margin-top:1rem" data-empty-text>尚未查询任何账户</div>
+                </div>
+
+                <!-- 充值 -->
+                <div class="sub-card">
+                    <h3 data-i18n="account.deposit.title">账户充值</h3>
+                    <form id="depositForm" class="form-grid" novalidate>
+                        <label class="field">
+                            <span data-i18n="account.field.accountId">账户 ID</span>
+                            <input id="depositAccountId" name="accountId" type="number" min="1" placeholder="输入账户 ID" data-i18n-placeholder="ph.accId" required>
+                        </label>
+                        <label class="field">
+                            <span data-i18n="account.field.depositAmount">充值金额</span>
+                            <input id="depositAmount" name="amount" type="number" step="0.01" min="0.01" placeholder="100.00" data-i18n-placeholder="ph.amount" required>
+                        </label>
+                        <div class="actions field--full">
+                            <button class="btn btn--primary" id="submitDepositBtn" type="submit" data-i18n="account.btn.deposit">确认充值</button>
+                            <button class="btn btn--ghost" type="reset" data-i18n="btn.reset">重置</button>
+                        </div>
+                    </form>
+                    <div id="depositResult" class="feedback"></div>
+                </div>
             </section>
         </main>
     </div>
