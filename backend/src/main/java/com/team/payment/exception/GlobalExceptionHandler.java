@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -51,6 +52,20 @@ public class GlobalExceptionHandler {
             .build();
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 处理静态资源找不到的异常（如 favicon.ico），返回 404
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException e) {
+        ErrorResponse response = ErrorResponse.builder()
+            .errorCode("NOT_FOUND")
+            .message(e.getMessage())
+            .timestamp(LocalDateTime.now())
+            .traceId(UUID.randomUUID().toString())
+            .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     /**

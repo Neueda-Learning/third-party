@@ -1,10 +1,12 @@
 package com.team.payment.service;
 
+import com.team.payment.dao.AccountDao;
 import com.team.payment.dao.PaymentDao;
 import com.team.payment.dao.PaymentHistoryDao;
 import com.team.payment.dto.CreatePaymentRequest;
 import com.team.payment.dto.PaymentResponse;
 import com.team.payment.dto.HistoryResponse;
+import com.team.payment.entity.Account;
 import com.team.payment.entity.Payment;
 import com.team.payment.entity.PaymentHistory;
 import com.team.payment.exception.PaymentNotFoundException;
@@ -35,6 +37,9 @@ class PaymentServiceImplTest {
 
     @Mock
     private PaymentHistoryDao paymentHistoryDao;
+
+    @Mock
+    private AccountDao accountDao;
 
     @InjectMocks
     private PaymentServiceImpl paymentService;
@@ -174,6 +179,7 @@ class PaymentServiceImplTest {
         verify(paymentHistoryDao).findByPaymentId(paymentId);
     }
 
+    @Test
     void shouldReturnCreatedSnapshotWhenRequestValid() {
         mockAutoLifecycle("CNY");
         CreatePaymentRequest request = validRequestBuilder().build();
@@ -228,18 +234,22 @@ class PaymentServiceImplTest {
         assertEquals("USD", response.getCurrency());
         verify(paymentDao, times(1)).create(any());
         verify(paymentHistoryDao, times(4)).insert(any());
-
     }
 
-    private void mockAutoLifecycle (String currency){
+    private void mockAutoLifecycle(String currency) {
         Payment created = Payment.builder().id(1L).status("CREATED").currency(currency).build();
         Payment validated = Payment.builder().id(1L).status("VALIDATED").currency(currency).build();
         Payment sent = Payment.builder().id(1L).status("SENT").currency(currency).build();
         Payment completed = Payment.builder().id(1L).status("COMPLETED").currency(currency).build();
 
-        org.mockito.Mockito.when(paymentDao.findByIdempotencyKey(any())).thenReturn(null);
-        org.mockito.Mockito.when(paymentDao.create(any())).thenReturn(created);
-        org.mockito.Mockito.when(paymentDao.findById(1L)).thenReturn(
+        Account srcAccount = Account.builder().id(1L).accountName("SRCACC001").build();
+        Account dstAccount = Account.builder().id(2L).accountName("DSTACC001").build();
+
+        when(accountDao.findByAccountName("SRCACC001")).thenReturn(srcAccount);
+        when(accountDao.findByAccountName("DSTACC001")).thenReturn(dstAccount);
+        when(paymentDao.findByIdempotencyKey(any())).thenReturn(null);
+        when(paymentDao.create(any())).thenReturn(created);
+        when(paymentDao.findById(1L)).thenReturn(
                 created,
                 validated,
                 validated,
@@ -249,7 +259,7 @@ class PaymentServiceImplTest {
         );
     }
 
-    private CreatePaymentRequest.CreatePaymentRequestBuilder validRequestBuilder () {
+    private CreatePaymentRequest.CreatePaymentRequestBuilder validRequestBuilder() {
         return CreatePaymentRequest.builder()
                 .sourceAccount("SRCACC001")
                 .destinationAccount("DSTACC001")
