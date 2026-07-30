@@ -1,532 +1,306 @@
-/**
- * 主业务逻辑模块
- * 处理页面交互和API调用
- */
+/* ================================================================
+   main.js
+================================================================ */
+'use strict';
 
-let currentPage = 0;
-let currentPageSize = 20;
-let currentStatus = '';
+let listPage = 0;
+let listSize = 20;
+let listStatus = '';
+let listLoaded = false;
 
-/**
- * 页面初始化
- */
-document.addEventListener('DOMContentLoaded', function () {
-    initPageEvents();
-    showModule('create');
-    generateIdempotencyKey();
+document.addEventListener('DOMContentLoaded', () => {
+    initNav();
+    initCreateForm();
+    initListView();
+    initDetailView();
+    genIdempotencyKey();
 });
 
-/**
- * 初始化页面事件
- */
-function initPageEvents() {
-    // 导航菜单
-    document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function (e) {
+// ── Navigation ───────────────────────────────────────────────────
+function initNav() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', e => {
             e.preventDefault();
-            const target = this.getAttribute('href');
-            showModule(target.substring(1));
+            switchView(item.dataset.view);
         });
-    });
-
-    // 创建支付表单
-    document.getElementById('createForm').addEventListener('submit', handleCreatePayment);
-    document.getElementById('generateKeyBtn').addEventListener('click', generateIdempotencyKey);
-
-    // 列表查询
-    document.getElementById('queryBtn').addEventListener('click', handleListPayments);
-    document.getElementById('statusFilter').addEventListener('change', () => {
-        currentPage = 0;
-        handleListPayments();
-    });
-    document.getElementById('pageSize').addEventListener('change', () => {
-        currentPage = 0;
-        handleListPayments();
-    });
-
-    // 详情查询
-    document.getElementById('detailQueryBtn').addEventListener('click', handleGetDetail);
-    document.getElementById('detailPaymentId').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            handleGetDetail();
-        }
     });
 }
 
-/**
- * 模块切换（带过渡动画）
- */
-function showModule(moduleName) {
-    document.querySelectorAll('.module').forEach(m => {
-        if (m.classList.contains('active')) {
-            m.classList.remove('active');
-        }
-    });
-    const targetModule = document.getElementById(moduleName);
-    if (targetModule) {
-        // 短暂延迟让 CSS animation 重新触发
-        requestAnimationFrame(() => {
-            targetModule.classList.add('active');
-        });
-    }
-
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    document.querySelector(`nav a[href="#${moduleName}"]`)?.classList.add('active');
+function switchView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + viewId)?.classList.add('active');
+    document.querySelector(`.nav-item[data-view="${viewId}"]`)?.classList.add('active');
+    if (viewId === 'list') loadList();
 }
 
-/**
- * 生成幂等键
- */
-function generateIdempotencyKey() {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 9);
-    const key = `payment-${timestamp}-${random}`;
+// ── Idempotency key ───────────────────────────────────────────────
+function genIdempotencyKey() {
+    const key = `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     document.getElementById('idempotencyKey').value = key;
 }
 
-/**
- * 处理创建支付
- */
-async function handleCreatePayment(e) {
-    e.preventDefault();
+// ── Create ────────────────────────────────────────────────────────
+function initCreateForm() {
+    document.getElementById('regenKeyBtn').addEventListener('click', genIdempotencyKey);
 
-    const sourceAccount = document.getElementById('sourceAccount').value.trim();
-    const destinationAccount = document.getElementById('destinationAccount').value.trim();
-    const amount = document.getElementById('amount').value.trim();
-    const currency = 'CNY';
-    const reference = document.getElementById('reference').value.trim();
-    const idempotencyKey = document.getElementById('idempotencyKey').value.trim();
+    document.getElementById('createForm').addEventListener('reset', () => {
+        setTimeout(genIdempotencyKey, 0);
+        hideFeedback('createFeedback');
+    });
 
-    if (!sourceAccount || !destinationAccount || !amount) {
-        showResult('createResult', '请填写所有必需字段', 'error');
-        return;
-    }
+    document.getElementById('createForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn = e.target.querySelector('[type=submit]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> 提交中…';
 
-    const paymentData = {
-        sourceAccount,
-        destinationAccount,
-        amount: parseFloat(amount),
-        currency,
-        reference: reference || undefined
-    };
+        const body = {
+            sourceAccount:      document.getElementById('sourceAccount').value.trim(),
+            destinationAccount: document.getElementById('destinationAccount').value.trim(),
+            amount:             parseFloat(document.getElementById('amount').value),
+            currency:           'CNY',
+            reference:          document.getElementById('reference').value.trim() || undefined,
+        };
+        const idempotencyKey = document.getElementById('idempotencyKey').value.trim();
+
+        try {
+            const result = await PaymentAPI.createPayment(body, idempotencyKey);
+            if (result.code === 'SUCCESS') {
+                const isNew = result.status === 201;
+                showFeedback('createFeedback', 'success',
+                    isNew
+                        ? `<i class="fa-solid fa-circle-check"></i> 支付创建成功，ID: <strong>${result.data.id}</strong>，状态: ${result.data.status}`
+                        : `<i class="fa-solid fa-circle-info"></i> 幂等返回已存在支付，ID: <strong>${result.data.id}</strong>`
+                );
+                document.getElementById('createForm').reset();
+            } else if (result.code === 'CONFLICT') {
+                showFeedback('createFeedback', 'error',
+                    `<i class="fa-solid fa-circle-xmark"></i> 幂等键冲突：${result.data?.message}`);
+            } else {
+                showFeedback('createFeedback', 'error',
+                    `<i class="fa-solid fa-circle-xmark"></i> ${result.data?.message ?? '提交失败'}`);
+            }
+        } catch (err) {
+            showFeedback('createFeedback', 'error',
+                `<i class="fa-solid fa-circle-xmark"></i> 请求失败：${err.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 提交';
+        }
+    });
+}
+
+// ── List ─────────────────────────────────────────────────────────
+function initListView() {
+    document.getElementById('queryBtn').addEventListener('click', () => { listPage = 0; loadList(); });
+    document.getElementById('statusFilter').addEventListener('change', () => { listPage = 0; loadList(); });
+    document.getElementById('pageSize').addEventListener('change', () => { listPage = 0; loadList(); });
+}
+
+async function loadList() {
+    listStatus = document.getElementById('statusFilter').value;
+    listSize   = parseInt(document.getElementById('pageSize').value);
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = `<tr><td colspan="8" class="table-placeholder"><span class="spinner"></span> 加载中…</td></tr>`;
+    document.getElementById('totalCount').textContent = '';
+    document.getElementById('pagination').innerHTML = '';
 
     try {
-        const result = await PaymentAPI.createPayment(paymentData, idempotencyKey);
-
-        if (result.code === 'SUCCESS') {
-        console.log('创建支付结果:', result.status, result.data);
-            const isNew =  result.status === 201;
-            const message = isNew
-                ? `✓ 支付创建成功! ID: ${result.data.id}`
-                : `✓ 重复请求，返回已存在的支付! ID: ${result.data.id}`;
-
-            showResult('createResult', message, 'success');
-            showPaymentDetail(result.data);
-
-            // 重置表单
-            document.getElementById('createForm').reset();
-            generateIdempotencyKey();
-
-        } else if (result.code === 'CONFLICT') {
-            showResult('createResult', `✗ 幂等键冲突: ${result.data.message}`, 'error');
-        } else {
-            showResult('createResult', `✗ 创建失败: ${result.data.message}`, 'error');
+        const result = await PaymentAPI.listPayments(listPage, listSize, listStatus);
+        if (result.code !== 'SUCCESS') {
+            tbody.innerHTML = `<tr><td colspan="8" class="table-placeholder">查询失败：${result.data?.message ?? '未知错误'}</td></tr>`;
+            return;
         }
+        const { content, totalElements, totalPages } = result.data;
+        renderTable(content);
+        document.getElementById('totalCount').textContent = `共 ${totalElements ?? content.length} 条`;
+        renderPagination(totalPages, listPage);
     } catch (err) {
-        showResult('createResult', `✗ 请求失败: ${err.message}`, 'error');
+        tbody.innerHTML = `<tr><td colspan="8" class="table-placeholder">请求失败：${err.message}</td></tr>`;
     }
 }
 
-/**
- * 处理列表查询
- */
-async function handleListPayments() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const pageSizeSelect = document.getElementById('pageSize').value;
-    currentPageSize = parseInt(pageSizeSelect);
-    currentStatus = statusFilter;
-
-    // 显示 loading 状态
-    const tbody = document.querySelector('#paymentTable tbody');
-    tbody.innerHTML = '<tr><td colspan="8" class="loading"><span class="loading-spinner"></span> 加载中...</td></tr>';
-
-    const result = await PaymentAPI.listPayments(currentPage, currentPageSize, statusFilter);
-
-    if (result.code === 'SUCCESS') {
-        renderPaymentTable(result.data.content);
-        renderPagination(result.data.totalPages, currentPage);
-    } else {
-        showAlert('paymentTable', `查询失败: ${result.data.message}`, 'error');
-    }
-}
-
-/**
- * 渲染支付表格
- */
-function renderPaymentTable(payments) {
-    const tbody = document.querySelector('#paymentTable tbody');
-    tbody.innerHTML = '';
-
-    if (!payments || payments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无数据</td></tr>';
+function renderTable(rows) {
+    const tbody = document.getElementById('tableBody');
+    if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="table-placeholder">暂无数据</td></tr>`;
         return;
     }
-
-    payments.forEach((payment, index) => {
-        const row = document.createElement('tr');
-        row.style.animationDelay = `${index * 40}ms`;
-        row.style.animation = 'fadeSlideIn 0.3s ease both';
-        row.innerHTML = `
-            <td><strong>${payment.id}</strong></td>
-            <td style="font-size:0.82em;color:#64748b;">${payment.idempotencyKey}</td>
-            <td>${payment.sourceAccount}</td>
-            <td>${payment.destinationAccount}</td>
-            <td><strong>${payment.amount}</strong></td>
-            <td><span class="status ${payment.status}">${getStatusLabel(payment.status)}</span></td>
-            <td>${formatDateTime(payment.createdAt)}</td>
+    tbody.innerHTML = rows.map(p => `
+        <tr>
+            <td><strong>${p.id}</strong></td>
+            <td><span class="idem-key" title="${p.idempotencyKey}">${p.idempotencyKey}</span></td>
+            <td>${p.sourceAccount}</td>
+            <td>${p.destinationAccount}</td>
+            <td>${p.amount}</td>
+            <td>${statusBadge(p.status)}</td>
+            <td>${fmtDate(p.createdAt)}</td>
             <td>
-                <button class="btn btn-outline" style="padding:6px 14px;font-size:0.85em;" onclick="loadPaymentDetail(${payment.id})">
+                <button class="btn btn-ghost btn-sm" onclick="openDetail(${p.id})">
                     <i class="fa-solid fa-eye"></i> 详情
                 </button>
             </td>
-        `;
-        tbody.appendChild(row);
-    });
+        </tr>`).join('');
 }
 
-/**
- * 渲染分页
- */
-function renderPagination(totalPages, currentPage) {
-    const paginationDiv = document.getElementById('pagination');
-    paginationDiv.innerHTML = '';
+function renderPagination(totalPages, cur) {
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
 
-    if (totalPages <= 1) return;
-
-    // 上一页
-    if (currentPage > 0) {
-        const prevBtn = document.createElement('button');
-        prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i> 上一页';
-        prevBtn.onclick = () => {
-            currentPage--;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(prevBtn);
-    }
-
-    // 页码
-    for (let i = 0; i < totalPages; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = (i + 1).toString();
-        if (i === currentPage) {
-            pageBtn.classList.add('active');
-        }
-        pageBtn.onclick = () => {
-            currentPage = i;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(pageBtn);
-    }
-
-    // 下一页
-    if (currentPage < totalPages - 1) {
-        const nextBtn = document.createElement('button');
-        nextBtn.innerHTML = '下一页 <i class="fa-solid fa-chevron-right"></i>';
-        nextBtn.onclick = () => {
-            currentPage++;
-            handleListPayments();
-        };
-        paginationDiv.appendChild(nextBtn);
-    }
-}
-
-/**
- * 处理详情查询
- */
-async function handleGetDetail() {
-    const paymentIdInput = document.getElementById('detailPaymentId');
-    const paymentId = parseInt(paymentIdInput.value.trim());
-
-    if (!paymentId) {
-        showAlert('detailContent', '请输入支付ID', 'error');
-        return;
-    }
-
-    await loadPaymentDetail(paymentId);
-}
-
-/**
- * 加载支付详情
- */
-async function loadPaymentDetail(paymentId) {
-    const result = await PaymentAPI.getPaymentDetail(paymentId);
-
-    if (result.code === 'SUCCESS') {
-        showPaymentDetail(result.data);
-        showModule('detail');
-        document.getElementById('detailPaymentId').value = paymentId;
-
-        // 加载历史记录
-        const historyResult = await PaymentAPI.getPaymentHistory(paymentId);
-        if (historyResult.code === 'SUCCESS') {
-            renderPaymentHistory(historyResult.data);
-        }
-
-        // 显示操作按钮
-        renderOperationButtons(result.data);
+    let pages = [];
+    if (totalPages <= 7) {
+        for (let i = 0; i < totalPages; i++) pages.push(i);
     } else {
-        showAlert('detailContent', `查询失败: ${result.data.message}`, 'error');
+        pages = [0, 1];
+        for (let i = Math.max(2, cur - 1); i <= Math.min(totalPages - 3, cur + 1); i++) pages.push(i);
+        pages.push(totalPages - 2, totalPages - 1);
+        pages = [...new Set(pages)].sort((a, b) => a - b);
     }
+
+    let html = `<span class="pagination-info">第 ${cur + 1} / ${totalPages} 页</span>`;
+    html += `<button ${cur === 0 ? 'disabled' : ''} onclick="gotoPage(${cur - 1})">
+                <i class="fa-solid fa-chevron-left"></i>
+             </button>`;
+    let prev = -1;
+    for (const p of pages) {
+        if (prev >= 0 && p - prev > 1) html += `<button disabled>…</button>`;
+        html += `<button class="${p === cur ? 'active' : ''}" onclick="gotoPage(${p})">${p + 1}</button>`;
+        prev = p;
+    }
+    html += `<button ${cur >= totalPages - 1 ? 'disabled' : ''} onclick="gotoPage(${cur + 1})">
+                <i class="fa-solid fa-chevron-right"></i>
+             </button>`;
+    el.innerHTML = html;
 }
 
-/**
- * 显示支付详情
- */
-function showPaymentDetail(payment) {
-    const detailContent = document.getElementById('detailContent');
-    detailContent.innerHTML = `
-        <div class="detail-content">
-            <div class="detail-item">
-                <span class="detail-label">支付ID:</span>
-                <span class="detail-value">${payment.id}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">幂等键:</span>
-                <span class="detail-value">${payment.idempotencyKey}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">付款账户:</span>
-                <span class="detail-value">${payment.sourceAccount}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">收款账户:</span>
-                <span class="detail-value">${payment.destinationAccount}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">金额:</span>
-                <span class="detail-value">${payment.amount} ${payment.currency}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">状态:</span>
-                <span class="detail-value"><span class="status ${payment.status}">${getStatusLabel(payment.status)}</span></span>
-            </div>
-            ${payment.errorCode ? `
-            <div class="detail-item">
-                <span class="detail-label">错误码:</span>
-                <span class="detail-value">${payment.errorCode}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">错误信息:</span>
-                <span class="detail-value">${payment.errorMessage}</span>
-            </div>
-            ` : ''}
-            <div class="detail-item">
-                <span class="detail-label">参考号:</span>
-                <span class="detail-value">${payment.reference || '-'}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">创建时间:</span>
-                <span class="detail-value">${formatDateTime(payment.createdAt)}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">更新时间:</span>
-                <span class="detail-value">${formatDateTime(payment.updatedAt)}</span>
-            </div>
-        </div>
-    `;
-}
+function gotoPage(p) { listPage = p; loadList(); }
 
-/**
- * 渲染支付历史
- */
-function renderPaymentHistory(histories) {
-    const historySection = document.getElementById('historySection');
-    const timeline = document.getElementById('historyTimeline');
-
-    timeline.innerHTML = '';
-
-    if (!histories || histories.length === 0) {
-        historySection.style.display = 'none';
-        return;
-    }
-
-    historySection.style.display = 'block';
-
-    histories.forEach(record => {
-        const item = document.createElement('div');
-        item.className = 'timeline-item';
-        item.innerHTML = `
-            <div class="timeline-item-time">${formatDateTime(record.createdAt)}</div>
-            <div class="timeline-item-status">
-                ${record.fromStatus || '初始'} → ${record.toStatus}
-            </div>
-            <div class="timeline-item-reason">${record.reason || '-'}</div>
-            <div class="timeline-item-triggered">触发方: ${record.triggeredBy}</div>
-        `;
-        timeline.appendChild(item);
-    });
-}
-
-/**
- * 渲染操作按钮
- */
-function renderOperationButtons(payment) {
-    const operationsSection = document.getElementById('operationsSection');
-    const operationButtons = document.getElementById('operationButtons');
-
-    operationButtons.innerHTML = '';
-
-    const buttons = [];
-
-    // 根据当前状态显示可用的操作按钮
-    if (payment.status === 'CREATED') {
-        buttons.push({
-            label: '<i class="fa-solid fa-circle-check"></i> CREATED → VALIDATED',
-            action: () => updatePaymentStatus(payment.id, 'validatePayment')
-        });
-    }
-
-    if (payment.status === 'VALIDATED') {
-        buttons.push({
-            label: '<i class="fa-solid fa-paper-plane"></i> VALIDATED → SENT',
-            action: () => updatePaymentStatus(payment.id, 'sendPayment')
-        });
-    }
-
-    if (payment.status === 'SENT') {
-        buttons.push({
-            label: '<i class="fa-solid fa-flag-checkered"></i> SENT → COMPLETED',
-            action: () => updatePaymentStatus(payment.id, 'completePayment')
-        });
-        buttons.push({
-            label: '<i class="fa-solid fa-triangle-exclamation"></i> SENT → FAILED',
-            action: () => updatePaymentStatus(payment.id, 'failPayment'),
-            className: 'btn-danger'
-        });
-    }
-
-    // 如果还不是终态，允许直接标记为失败
-    if (payment.status !== 'COMPLETED' && payment.status !== 'FAILED') {
-        buttons.push({
-            label: '<i class="fa-solid fa-ban"></i> 标记为失败',
-            action: () => updatePaymentStatus(payment.id, 'failPayment'),
-            className: 'btn-danger'
-        });
-    }
-
-    // 刷新按钮
-    buttons.push({
-        label: '<i class="fa-solid fa-rotate"></i> 刷新',
-        action: () => loadPaymentDetail(payment.id),
-        className: 'btn-secondary'
-    });
-
-    buttons.forEach(btn => {
-        const button = document.createElement('button');
-        button.className = `btn ${btn.className || 'btn-primary'} operation-btn`;
-        button.innerHTML = btn.label;
-        button.onclick = btn.action;
-        operationButtons.appendChild(button);
-    });
-
-    if (buttons.length > 0) {
-        operationsSection.style.display = 'block';
-    }
-}
-
-/**
- * 更新支付状态
- */
-async function updatePaymentStatus(paymentId, action) {
-    let result;
-
-    switch (action) {
-        case 'validatePayment':
-            result = await PaymentAPI.validatePayment(paymentId);
-            break;
-        case 'sendPayment':
-            result = await PaymentAPI.sendPayment(paymentId);
-            break;
-        case 'completePayment':
-            result = await PaymentAPI.completePayment(paymentId);
-            break;
-        case 'failPayment':
-            result = await PaymentAPI.failPayment(paymentId);
-            break;
-        default:
-            return;
-    }
-
-    if (result.code === 'SUCCESS') {
-        showAlert('detailContent', '状态更新成功', 'success');
-        await loadPaymentDetail(paymentId);
-    } else {
-        showAlert('detailContent', `更新失败: ${result.data.message}`, 'error');
-    }
-}
-
-/**
- * 显示提示信息
- */
-function showResult(elementId, message, type) {
-    const resultDiv = document.getElementById(elementId);
-    const iconMap = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
-    const icon = iconMap[type] || 'fa-circle-info';
-    resultDiv.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
-    resultDiv.className = `result show ${type}`;
-
-    setTimeout(() => {
-        resultDiv.classList.remove('show');
-    }, 4000);
-}
-
-/**
- * 显示警告信息
- */
-function showAlert(elementId, message, type) {
-    const container = document.getElementById(elementId);
-    if (container) {
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
-        const iconMap = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
-        const icon = iconMap[type] || 'fa-circle-info';
-        alert.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
-        container.insertBefore(alert, container.firstChild);
-
-        setTimeout(() => {
-            alert.style.transition = 'opacity 0.4s ease';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 400);
-        }, 5000);
-    }
-}
-
-/**
- * 格式化日期时间
- */
-function formatDateTime(dateTimeStr) {
-    if (!dateTimeStr) return '-';
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-/**
- * 获取状态标签
- */
-function getStatusLabel(status) {
-    const labels = {
-        'CREATED': '已创建',
-        'VALIDATED': '已验证',
-        'SENT': '已发送',
-        'COMPLETED': '已完成',
-        'FAILED': '失败'
+// ── Detail ───────────────────────────────────────────────────────
+function initDetailView() {
+    const go = () => {
+        const id = parseInt(document.getElementById('detailId').value);
+        if (id > 0) loadDetail(id);
     };
-    return labels[status] || status;
+    document.getElementById('detailQueryBtn').addEventListener('click', go);
+    document.getElementById('detailId').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+}
+
+window.openDetail = function(id) {
+    switchView('detail');
+    document.getElementById('detailId').value = id;
+    loadDetail(id);
+};
+
+async function loadDetail(id) {
+    const container = document.getElementById('detailBody');
+    container.innerHTML = `<div class="detail-loading"><span class="spinner"></span> 加载中…</div>`;
+
+    try {
+        const [detailRes, historyRes] = await Promise.all([
+            PaymentAPI.getPaymentDetail(id),
+            PaymentAPI.getPaymentHistory(id),
+        ]);
+
+        if (detailRes.code !== 'SUCCESS') {
+            container.innerHTML = `<div class="detail-loading" style="color:#991b1b">
+                <i class="fa-solid fa-circle-xmark"></i> ${detailRes.data?.message ?? '查询失败'}
+            </div>`;
+            return;
+        }
+
+        const p = detailRes.data;
+        const errorRows = p.errorCode
+            ? `${cell('错误码', p.errorCode)}${cell('错误信息', p.errorMessage ?? '—')}`
+            : '';
+
+        container.innerHTML = `
+            <div class="detail-result">
+                <div class="detail-result-title">
+                    <span class="detail-result-id">支付 #${p.id}</span>
+                    ${statusBadge(p.status)}
+                    <span class="detail-result-time">${fmtDate(p.updatedAt)}</span>
+                </div>
+                <div class="detail-info-grid">
+                    ${cell('付款账户', p.sourceAccount)}
+                    ${cell('收款账户', p.destinationAccount)}
+                    ${cell('金额', `${p.amount} ${p.currency}`)}
+                    ${cell('参考号', p.reference || '—')}
+                    ${cell('创建时间', fmtDate(p.createdAt))}
+                    ${cell('更新时间', fmtDate(p.updatedAt))}
+                    ${errorRows}
+                    ${cellFull('幂等键', `<span class="mono-text">${p.idempotencyKey}</span>`)}
+                </div>
+                ${renderHistory(historyRes)}
+            </div>
+        `;
+    } catch (err) {
+        container.innerHTML = `<div class="detail-loading" style="color:#991b1b">
+            <i class="fa-solid fa-circle-xmark"></i> 请求失败：${err.message}
+        </div>`;
+    }
+}
+
+function renderHistory(historyRes) {
+    if (historyRes.code !== 'SUCCESS' || !historyRes.data?.length) return '';
+    const items = historyRes.data.map(h => `
+        <div class="timeline-entry">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="timeline-status">${h.fromStatus || '初始'} → ${h.toStatus}</div>
+                <div class="timeline-meta">
+                    <span>${fmtDate(h.createdAt)}</span>
+                    ${h.reason ? `<span>${h.reason}</span>` : ''}
+                    ${h.triggeredBy ? `<span>触发方：${h.triggeredBy}</span>` : ''}
+                </div>
+            </div>
+        </div>`).join('');
+    return `
+        <div class="detail-history">
+            <div class="history-title"><i class="fa-solid fa-timeline"></i> 状态变更历史</div>
+            <div class="timeline-list">${items}</div>
+        </div>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function cell(label, value, full = false) {
+    return `<div class="detail-cell${full ? ' detail-cell-full' : ''}">
+        <div class="detail-cell-label">${label}</div>
+        <div class="detail-cell-value">${value}</div>
+    </div>`;
+}
+function cellFull(label, value) { return cell(label, value, true); }
+
+function statusBadge(s) {
+    const map = {
+        CREATED:   ['badge-created',   '已创建'],
+        VALIDATED: ['badge-validated', '已验证'],
+        SENT:      ['badge-sent',      '已发送'],
+        COMPLETED: ['badge-completed', '已完成'],
+        FAILED:    ['badge-failed',    '失败'],
+    };
+    const [cls, text] = map[s] || ['badge-created', s];
+    return `<span class="badge ${cls}">${text}</span>`;
+}
+
+function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleString('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+}
+
+function showFeedback(id, type, html) {
+    const el = document.getElementById(id);
+    el.className = `feedback feedback-${type}`;
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    if (type === 'success') setTimeout(() => hideFeedback(id), 6000);
+}
+
+function hideFeedback(id) {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
 }
