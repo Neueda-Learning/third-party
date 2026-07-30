@@ -1,10 +1,13 @@
 const state = {
     activeTab: "create",
+    activeSubTab: "acc-create",
     page: 0,
     pageSize: 20,
     status: "",
     selectedPaymentId: null,
-    locale: localStorage.getItem("ui-locale") || "zh"
+    locale: normalizeLocale(localStorage.getItem("ui-locale")),
+    selectedPayment: null,
+    selectedHistory: []
 };
 
 const i18n = {
@@ -25,6 +28,7 @@ const i18n = {
         "field.destination": "收款账户",
         "field.amount": "金额（CNY）",
         "field.reference": "参考号 / 备注",
+        "field.exchangeRate": "汇率（跨币种时必填）",
         "field.idempotency": "幂等键",
         "btn.regenerate": "重新生成",
         "btn.create": "创建支付",
@@ -59,11 +63,12 @@ const i18n = {
         "col.status": "状态",
         "col.createdAt": "创建时间",
         "col.action": "操作",
-        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "footer": "Thrid-Party | 2026",
         "ph.source": "例如 ACC001",
         "ph.destination": "例如 ACC002",
         "ph.amount": "1500.50",
         "ph.reference": "例如 INV-20260727",
+        "ph.exchangeRate": "例如 7.25",
         "ph.detailId": "输入支付ID，例如 1",
         "msg.requireFields": "请填写付款账户、收款账户和金额",
         "msg.accountSame": "付款账户和收款账户不能相同",
@@ -88,7 +93,51 @@ const i18n = {
         "flow.created": "创建",
         "flow.validated": "验证",
         "flow.sent": "发送",
-        "flow.current": "当前状态"
+        "flow.completed": "完成",
+        "flow.failed": "失败",
+        "flow.current": "当前状态",
+        "flow.currentEn": "Current Status",
+        "flow.currentZh": "当前状态",
+        "tab.account": "账户管理",
+        "account.title": "账户管理",
+        "account.desc": "创建账户、查询账户信息、为账户充值。",
+        "account.create.title": "创建账户",
+        "account.query.title": "查询账户",
+        "account.deposit.title": "账户充值",
+        "account.field.accountName": "账户名",
+        "account.field.currency": "币种",
+        "account.field.initialBalance": "初始余额",
+        "account.field.accountId": "账户 ID",
+        "account.field.depositAmount": "充值金额",
+        "account.query.desc": "填写 ID 或账户名查询单个账户，两者均不填则查询全部。",
+        "account.query.byId": "账户 ID",
+        "account.query.byAccountName": "账户名",
+        "account.btn.query": "查询",
+        "account.btn.create": "创建账户",
+        "account.btn.creating": "创建中...",
+        "account.btn.queryById": "按 ID 查询",
+        "account.btn.queryByAccountName": "按账户名查询",
+        "account.btn.deposit": "确认充值",
+        "account.btn.depositing": "充值中...",
+        "ph.accAccountName": "例如 alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "输入账户 ID",
+        "account.label.id": "账户 ID",
+        "account.label.accountName": "账户名",
+        "account.label.currency": "币种",
+        "account.label.balance": "当前余额",
+        "account.label.createdAt": "创建时间",
+        "account.label.updatedAt": "更新时间",
+        "account.empty": "尚未查询任何账户",
+        "account.list.empty": "暂无账户数据",
+        "msg.accCreateOk": "账户创建成功，ID: {id}",
+        "msg.accCreateFail": "账户创建失败：{message}",
+        "msg.accQueryFail": "账户查询失败：{message}",
+        "msg.depositOk": "充值成功，账户 ID: {id}，当前余额: {balance}",
+        "msg.depositFail": "充值失败：{message}",
+        "msg.accInvalidId": "请输入有效的账户 ID",
+        "msg.accAccountNameEmpty": "请输入账户名"
     },
     en: {
         "app.title": "Payment Processing System",
@@ -107,6 +156,7 @@ const i18n = {
         "field.destination": "Destination Account",
         "field.amount": "Amount (CNY)",
         "field.reference": "Reference / Note",
+        "field.exchangeRate": "Exchange Rate (required for cross-currency)",
         "field.idempotency": "Idempotency Key",
         "btn.regenerate": "Regenerate",
         "btn.create": "Create Payment",
@@ -141,11 +191,12 @@ const i18n = {
         "col.status": "Status",
         "col.createdAt": "Created At",
         "col.action": "Action",
-        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "footer": "Thrid-Party | 2026",
         "ph.source": "e.g. ACC001",
         "ph.destination": "e.g. ACC002",
         "ph.amount": "1500.50",
         "ph.reference": "e.g. INV-20260727",
+        "ph.exchangeRate": "e.g. 7.25",
         "ph.detailId": "Enter payment ID, e.g. 1",
         "msg.requireFields": "Please fill source account, destination account and amount",
         "msg.accountSame": "Source and destination accounts cannot be the same",
@@ -170,7 +221,51 @@ const i18n = {
         "flow.created": "Created",
         "flow.validated": "Validated",
         "flow.sent": "Sent",
-        "flow.current": "Current"
+        "flow.completed": "Completed",
+        "flow.failed": "Failed",
+        "flow.current": "Current",
+        "flow.currentEn": "Current Status",
+        "flow.currentZh": "Current Status",
+        "tab.account": "Accounts",
+        "account.title": "Account Management",
+        "account.desc": "Create accounts, query account info, and deposit funds.",
+        "account.create.title": "Create Account",
+        "account.query.title": "Query Account",
+        "account.query.desc": "Enter ID or account name to query a single account, or leave both empty to list all.",
+        "account.query.byId": "Account ID",
+        "account.query.byAccountName": "Account Name",
+        "account.deposit.title": "Deposit",
+        "account.field.accountName": "Account Name",
+        "account.field.currency": "Currency",
+        "account.field.initialBalance": "Initial Balance",
+        "account.field.accountId": "Account ID",
+        "account.field.depositAmount": "Deposit Amount",
+        "account.btn.query": "Query",
+        "account.btn.create": "Create Account",
+        "account.btn.creating": "Creating...",
+        "account.btn.queryById": "Query by ID",
+        "account.btn.queryByAccountName": "Query by Account Name",
+        "account.btn.deposit": "Confirm Deposit",
+        "account.btn.depositing": "Depositing...",
+        "ph.accAccountName": "e.g. alice",
+        "ph.accCurrency": "CNY",
+        "ph.accInitialBalance": "0.00",
+        "ph.accId": "Enter account ID",
+        "account.label.id": "Account ID",
+        "account.label.accountName": "Account Name",
+        "account.label.currency": "Currency",
+        "account.label.balance": "Balance",
+        "account.label.createdAt": "Created At",
+        "account.label.updatedAt": "Updated At",
+        "account.empty": "No account queried yet",
+        "account.list.empty": "No account data",
+        "msg.accCreateOk": "Account created, ID: {id}",
+        "msg.accCreateFail": "Account creation failed: {message}",
+        "msg.accQueryFail": "Account query failed: {message}",
+        "msg.depositOk": "Deposit successful, Account ID: {id}, Balance: {balance}",
+        "msg.depositFail": "Deposit failed: {message}",
+        "msg.accInvalidId": "Please enter a valid account ID",
+        "msg.accAccountNameEmpty": "Please enter an account name"
     }
 };
 
@@ -181,15 +276,31 @@ document.addEventListener("DOMContentLoaded", () => {
     showTab("create");
 });
 
+function normalizeLocale(locale) {
+    if (typeof locale !== "string") {
+        return "zh";
+    }
+    const normalized = locale.trim().toLowerCase();
+    if (normalized.startsWith("en")) {
+        return "en";
+    }
+    return "zh";
+}
+
 function bindEvents() {
     document.querySelectorAll("[data-tab]").forEach((button) => {
         button.addEventListener("click", () => showTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll("[data-subtab]").forEach((button) => {
+        button.addEventListener("click", () => showSubTab(button.dataset.subtab));
     });
 
     document.getElementById("createForm").addEventListener("submit", handleCreatePayment);
     document.getElementById("createForm").addEventListener("reset", () => {
         window.setTimeout(generateIdempotencyKey, 0);
         hideFeedback();
+        clearCurrencyBadges();
     });
     document.getElementById("generateKeyBtn").addEventListener("click", generateIdempotencyKey);
     document.getElementById("fillDemoBtn").addEventListener("click", fillDemoData);
@@ -216,9 +327,32 @@ function bindEvents() {
         }
     });
 
+    // 账户管理事件
+    document.getElementById("createAccountForm").addEventListener("submit", handleCreateAccount);
+    document.getElementById("queryAccountForm").addEventListener("submit", (e) => { e.preventDefault(); handleQueryAccount(); });
+    document.getElementById("queryAccountForm").addEventListener("reset", () => {
+        hideAccountList();
+        const detailEl = document.getElementById("accountDetailContent");
+        detailEl.className = "detail-grid detail-grid--empty";
+        detailEl.style.display = "";
+        detailEl.textContent = t("account.empty");
+    });
+    document.getElementById("queryAccountId").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("queryAccountAccountName").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleQueryAccount(); }
+    });
+    document.getElementById("depositForm").addEventListener("submit", handleDeposit);
+
     ["sourceAccount", "destinationAccount", "amount"].forEach((id) => {
         document.getElementById(id).addEventListener("input", updateCreateHint);
     });
+
+    document.getElementById("sourceAccount").addEventListener("blur", () =>
+        fetchAndShowCurrencyBadge("sourceAccount", "sourceCurrencyBadge"));
+    document.getElementById("destinationAccount").addEventListener("blur", () =>
+        fetchAndShowCurrencyBadge("destinationAccount", "destinationCurrencyBadge"));
 }
 
 function showTab(tabName) {
@@ -233,6 +367,9 @@ function showTab(tabName) {
     if (tabName === "list") {
         loadPayments();
     }
+    if (tabName === "account") {
+        showSubTab(state.activeSubTab || "acc-create");
+    }
 }
 
 function generateIdempotencyKey() {
@@ -242,13 +379,27 @@ function generateIdempotencyKey() {
 }
 
 function toggleLocale() {
-    state.locale = state.locale === "zh" ? "en" : "zh";
+    setLocale(state.locale === "zh" ? "en" : "zh");
+}
+
+function showSubTab(subTabName) {
+    state.activeSubTab = subTabName;
+    document.querySelectorAll("[data-subpanel]").forEach((panel) => {
+        panel.style.display = panel.id === subTabName + "-panel" ? "" : "none";
+    });
+    document.querySelectorAll("[data-subtab]").forEach((btn) => {
+        btn.classList.toggle("is-active", btn.dataset.subtab === subTabName);
+    });
+}
+
+function setLocale(locale) {
+    state.locale = normalizeLocale(locale);
     localStorage.setItem("ui-locale", state.locale);
     applyLocale();
     updateCreateHint();
 
     const detailContent = document.getElementById("detailContent");
-    if (state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
+    if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
         detailContent.textContent = t("detail.empty");
     }
 }
@@ -274,12 +425,48 @@ function applyLocale() {
     if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
         detailContent.textContent = t("detail.empty");
     }
+
+    if (state.selectedPayment) {
+        renderDetail(state.selectedPayment);
+        renderStatusFlow(state.selectedPayment, state.selectedHistory);
+        renderHistory(state.selectedHistory);
+    }
+
+    const accDetailContent = document.getElementById("accountDetailContent");
+    if (accDetailContent && accDetailContent.classList.contains("detail-grid--empty")) {
+        accDetailContent.textContent = t("account.empty");
+    }
 }
 
 function t(key, vars = {}) {
     const dict = i18n[state.locale] || i18n.zh;
     const text = dict[key] || i18n.zh[key] || key;
     return Object.keys(vars).reduce((acc, name) => acc.replace(`{${name}}`, String(vars[name])), text);
+}
+
+function clearCurrencyBadges() {
+    ["sourceCurrencyBadge", "destinationCurrencyBadge"].forEach((id) => {
+        const badge = document.getElementById(id);
+        if (badge) { badge.hidden = true; badge.textContent = ""; }
+    });
+}
+
+async function fetchAndShowCurrencyBadge(inputId, badgeId) {
+    const accountName = document.getElementById(inputId).value.trim();
+    const badge = document.getElementById(badgeId);
+    if (!accountName) {
+        badge.hidden = true;
+        badge.textContent = "";
+        return;
+    }
+    const result = await AccountAPI.getAccountByAccountName(accountName);
+    if (result.ok && result.data && result.data.currency) {
+        badge.textContent = result.data.currency;
+        badge.hidden = false;
+    } else {
+        badge.hidden = true;
+        badge.textContent = "";
+    }
 }
 
 function fillDemoData() {
@@ -313,13 +500,14 @@ async function handleCreatePayment(event) {
     if (result.ok) {
         const isCreated = result.status === 201;
         const message = isCreated ? t("msg.createOk", { id: result.data.id }) : t("msg.createDup", { id: result.data.id });
-        showFeedback(message, "success");
-        showToast(message, "success");
 
         state.selectedPaymentId = result.data.id;
         document.getElementById("createForm").reset();
         generateIdempotencyKey();
         updateCreateHint();
+
+        showFeedback(message, "success");
+        showToast(message, "success");
     } else {
         const message = `${result.error.errorCode}: ${result.error.message}`;
         showFeedback(message, "error");
@@ -328,11 +516,14 @@ async function handleCreatePayment(event) {
 }
 
 function collectCreatePayload() {
+    const exchangeRateRaw = document.getElementById("exchangeRate").value;
+    const exchangeRate = exchangeRateRaw ? Number(exchangeRateRaw) : undefined;
     return {
         sourceAccount: document.getElementById("sourceAccount").value.trim(),
         destinationAccount: document.getElementById("destinationAccount").value.trim(),
         amount: Number(document.getElementById("amount").value),
         currency: "CNY",
+        exchangeRate,
         reference: document.getElementById("reference").value.trim() || undefined
     };
 }
@@ -485,6 +676,8 @@ async function openDetail(paymentId) {
     ]);
 
     if (!detailResult.ok) {
+        state.selectedPayment = null;
+        state.selectedHistory = [];
         detailContent.textContent = t("msg.queryFail", { message: detailResult.error.message });
         showToast(t("msg.detailFail", { message: detailResult.error.message }), "error");
         document.getElementById("statusFlowSection").hidden = true;
@@ -493,6 +686,8 @@ async function openDetail(paymentId) {
     }
 
     const historyRecords = historyResult.ok ? historyResult.data : [];
+    state.selectedPayment = detailResult.data;
+    state.selectedHistory = historyRecords;
     renderDetail(detailResult.data);
     renderStatusFlow(detailResult.data, historyRecords);
     renderHistory(historyRecords);
@@ -507,8 +702,14 @@ function renderStatusFlow(payment, records) {
         return;
     }
 
-    const statusOrder = ["CREATED", "VALIDATED", "SENT"];
-    const labels = [t("flow.created"), t("flow.validated"), t("flow.sent")];
+    const normalStatuses = ["CREATED", "VALIDATED", "SENT", "COMPLETED"];
+    const labelMap = {
+        CREATED: t("flow.created"),
+        VALIDATED: t("flow.validated"),
+        SENT: t("flow.sent"),
+        COMPLETED: t("flow.completed"),
+        FAILED: t("flow.failed")
+    };
 
     const reached = new Set();
     reached.add(payment.status);
@@ -518,37 +719,49 @@ function renderStatusFlow(payment, records) {
         }
     });
 
-    const currentIndex = statusOrder.indexOf(payment.status);
-    const maxReachedIndex = Math.max(
-        ...statusOrder.map((status, idx) => (reached.has(status) ? idx : -1))
-    );
+    const isFailedTriggered = payment.status === "FAILED" || reached.has("FAILED");
+    const statusOrder = [...normalStatuses];
+    if (isFailedTriggered) {
+        const failedRecord = [...(records || [])].reverse().find((record) => record && record.toStatus === "FAILED");
+        const fromStatus = failedRecord && failedRecord.fromStatus;
+        const reachedNormalIndex = Math.max(...normalStatuses.map((status, idx) => (reached.has(status) ? idx : -1)));
+        const insertAfter = normalStatuses.includes(fromStatus)
+            ? normalStatuses.indexOf(fromStatus)
+            : Math.max(0, reachedNormalIndex);
+        statusOrder.splice(insertAfter + 1, 0, "FAILED");
+    }
 
-    const stepClass = (idx) => {
-        if (idx === currentIndex) {
+    const stepClass = (statusCode) => {
+        if (statusCode === payment.status) {
             return "flow-step is-current";
         }
-        if (idx <= maxReachedIndex) {
+        if (reached.has(statusCode)) {
             return "flow-step is-done";
         }
         return "flow-step";
     };
 
     const linkClass = (idx) => {
-        const active = idx < Math.max(currentIndex, maxReachedIndex);
+        const left = statusOrder[idx];
+        const right = statusOrder[idx + 1];
+        const active = Boolean(left && right && reached.has(left) && reached.has(right));
         return `flow-link${active ? " is-active" : ""}`;
     };
 
-    container.innerHTML = `
-        <div class="${stepClass(0)}">${escapeHtml(labels[0])}</div>
-        <div class="${linkClass(0)}" aria-hidden="true"></div>
-        <div class="${stepClass(1)}">${escapeHtml(labels[1])}</div>
-        <div class="${linkClass(1)}" aria-hidden="true"></div>
-        <div class="${stepClass(2)}">${escapeHtml(labels[2])}</div>
-    `;
+    const flowParts = [];
+    statusOrder.forEach((statusCode, index) => {
+        flowParts.push(`<div class="${stepClass(statusCode)} flow-step--${escapeHtml(statusCode)}">${escapeHtml(labelMap[statusCode])}</div>`);
+        if (index < statusOrder.length - 1) {
+            flowParts.push(`<div class="${linkClass(index)}" aria-hidden="true"></div>`);
+        }
+    });
+    container.innerHTML = `<div class="flow-track${isFailedTriggered ? " flow-track--failed" : ""}">${flowParts.join("")}</div>`;
 
     const terminal = document.createElement("div");
     terminal.className = "flow-terminal";
-    terminal.innerHTML = `${escapeHtml(t("flow.current"))}: <span class="status-pill status-${escapeHtml(payment.status || "UNKNOWN")}">${escapeHtml(payment.status || "-")}</span>`;
+    terminal.innerHTML = `
+        <div class="flow-terminal-line">${escapeHtml(t("flow.current"))}: <span class="status-pill status-${escapeHtml(payment.status || "UNKNOWN")}">${escapeHtml(payment.status || "-")}</span></div>
+    `;
     container.appendChild(terminal);
     section.hidden = false;
 }
@@ -664,3 +877,203 @@ function escapeHtml(value) {
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
+
+// ─── 账户管理 ─────────────────────────────────────────────────────────────────
+
+async function handleCreateAccount(event) {
+    event.preventDefault();
+    const accountName = document.getElementById("accAccountName").value.trim();
+    const currency = document.getElementById("accCurrency").value.trim() || "CNY";
+    const initialBalance = Number(document.getElementById("accInitialBalance").value);
+
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+
+    const btn = document.getElementById("submitCreateAccountBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.creating");
+
+    const result = await AccountAPI.createAccount({ accountName, currency, initialBalance });
+
+    btn.disabled = false;
+    btn.textContent = t("account.btn.create");
+
+    const feedback = document.getElementById("createAccountResult");
+    if (result.ok) {
+        const msg = t("msg.accCreateOk", { id: result.data.id });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("createAccountForm").reset();
+    } else {
+        const msg = t("msg.accCreateFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
+    }
+}
+
+async function handleQueryAccountById() {
+    const raw = document.getElementById("queryAccountId").value;
+    const id = Number(raw);
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountById(id);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccountByAccountName() {
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    if (!accountName) {
+        showToast(t("msg.accAccountNameEmpty"), "error");
+        return;
+    }
+    const result = await AccountAPI.getAccountByAccountName(accountName);
+    renderAccountDetail(result);
+}
+
+async function handleQueryAccount() {
+    const idRaw = document.getElementById("queryAccountId").value.trim();
+    const accountName = document.getElementById("queryAccountAccountName").value.trim();
+    const id = Number(idRaw);
+
+    if (idRaw && id >= 1) {
+        const result = await AccountAPI.getAccountById(id);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else if (accountName) {
+        const result = await AccountAPI.getAccountByAccountName(accountName);
+        hideAccountList();
+        renderAccountDetail(result);
+    } else {
+        const result = await AccountAPI.getAllAccounts();
+        hideAccountDetail();
+        renderAccountList(result);
+    }
+}
+
+function hideAccountList() {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "none";
+    listEl.innerHTML = "";
+}
+
+function hideAccountDetail() {
+    const detailEl = document.getElementById("accountDetailContent");
+    detailEl.className = "detail-grid detail-grid--empty";
+    detailEl.textContent = "";
+    detailEl.style.display = "none";
+}
+
+function renderAccountList(result) {
+    const listEl = document.getElementById("accountListContent");
+    listEl.style.display = "block";
+    if (!result.ok) {
+        listEl.innerHTML = `<p class="feedback feedback--error is-show">${escapeHtml(t("msg.accQueryFail", { message: result.error.message }))}</p>`;
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const accounts = result.data;
+    if (!accounts || accounts.length === 0) {
+        listEl.innerHTML = `<p class="empty" style="padding:1rem 0">${escapeHtml(t("account.list.empty"))}</p>`;
+        return;
+    }
+    listEl.innerHTML = `
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>${escapeHtml(t("account.label.accountName"))}</th>
+                        <th>${escapeHtml(t("account.label.currency"))}</th>
+                        <th>${escapeHtml(t("account.label.balance"))}</th>
+                        <th>${escapeHtml(t("account.label.createdAt"))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${accounts.map((acc) => `
+                        <tr>
+                            <td>#${acc.id}</td>
+                            <td>${escapeHtml(acc.accountName || "-")}</td>
+                            <td>${escapeHtml(acc.currency || "-")}</td>
+                            <td>${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}</td>
+                            <td>${formatDateTime(acc.createdAt)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderAccountDetail(result) {
+    const el = document.getElementById("accountDetailContent");
+    el.style.display = "";
+    if (!result.ok) {
+        el.className = "detail-grid detail-grid--empty";
+        el.textContent = t("msg.accQueryFail", { message: result.error.message });
+        showToast(t("msg.accQueryFail", { message: result.error.message }), "error");
+        return;
+    }
+    const acc = result.data;
+    el.className = "detail-grid";
+    const fields = [
+        [t("account.label.id"), `#${acc.id}`],
+        [t("account.label.accountName"), escapeHtml(acc.accountName || "-")],
+        [t("account.label.currency"), escapeHtml(acc.currency || "-")],
+        [t("account.label.balance"), `${formatAmount(acc.balance)} ${escapeHtml(acc.currency || "")}`],
+        [t("account.label.createdAt"), formatDateTime(acc.createdAt)],
+        [t("account.label.updatedAt"), formatDateTime(acc.updatedAt)]
+    ];
+    el.innerHTML = fields
+        .map(([label, value]) => `
+            <article class="detail-item">
+                <div class="detail-item__label">${escapeHtml(label)}</div>
+                <div class="detail-item__value">${value}</div>
+            </article>
+        `)
+        .join("");
+}
+
+async function handleDeposit(event) {
+    event.preventDefault();
+    const id = Number(document.getElementById("depositAccountId").value);
+    const amount = Number(document.getElementById("depositAmount").value);
+
+    if (!id || id < 1) {
+        showToast(t("msg.accInvalidId"), "error");
+        return;
+    }
+    if (!amount || amount <= 0) {
+        showToast(t("msg.amountInvalid"), "error");
+        return;
+    }
+
+    const btn = document.getElementById("submitDepositBtn");
+    btn.disabled = true;
+    btn.textContent = t("account.btn.depositing");
+
+    const result = await AccountAPI.deposit(id, amount);
+
+    btn.disabled = false;
+    btn.textContent = t("account.btn.deposit");
+
+    const feedback = document.getElementById("depositResult");
+    if (result.ok) {
+        const msg = t("msg.depositOk", { id: result.data.id, balance: formatAmount(result.data.balance) });
+        feedback.className = "feedback is-show feedback--success";
+        feedback.textContent = msg;
+        showToast(msg, "success");
+        document.getElementById("depositForm").reset();
+    } else {
+        const msg = t("msg.depositFail", { message: result.error.message });
+        feedback.className = "feedback is-show feedback--error";
+        feedback.textContent = msg;
+        showToast(msg, "error");
+    }
+}
+
