@@ -4,7 +4,9 @@ const state = {
     pageSize: 20,
     status: "",
     selectedPaymentId: null,
-    locale: localStorage.getItem("ui-locale") || "zh"
+    locale: normalizeLocale(localStorage.getItem("ui-locale")),
+    selectedPayment: null,
+    selectedHistory: []
 };
 
 const i18n = {
@@ -59,7 +61,7 @@ const i18n = {
         "col.status": "状态",
         "col.createdAt": "创建时间",
         "col.action": "操作",
-        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "footer": "Thrid-Party | 2026",
         "ph.source": "例如 ACC001",
         "ph.destination": "例如 ACC002",
         "ph.amount": "1500.50",
@@ -88,7 +90,11 @@ const i18n = {
         "flow.created": "创建",
         "flow.validated": "验证",
         "flow.sent": "发送",
-        "flow.current": "当前状态"
+        "flow.completed": "完成",
+        "flow.failed": "失败",
+        "flow.current": "当前状态",
+        "flow.currentEn": "Current Status",
+        "flow.currentZh": "当前状态"
     },
     en: {
         "app.title": "Payment Processing System",
@@ -141,7 +147,7 @@ const i18n = {
         "col.status": "Status",
         "col.createdAt": "Created At",
         "col.action": "Action",
-        "footer": "JDBC Template + MySQL + Scheduler Timeout | 2026",
+        "footer": "Thrid-Party | 2026",
         "ph.source": "e.g. ACC001",
         "ph.destination": "e.g. ACC002",
         "ph.amount": "1500.50",
@@ -170,7 +176,11 @@ const i18n = {
         "flow.created": "Created",
         "flow.validated": "Validated",
         "flow.sent": "Sent",
-        "flow.current": "Current"
+        "flow.completed": "Completed",
+        "flow.failed": "Failed",
+        "flow.current": "Current",
+        "flow.currentEn": "Current Status",
+        "flow.currentZh": "Current Status"
     }
 };
 
@@ -180,6 +190,17 @@ document.addEventListener("DOMContentLoaded", () => {
     generateIdempotencyKey();
     showTab("create");
 });
+
+function normalizeLocale(locale) {
+    if (typeof locale !== "string") {
+        return "zh";
+    }
+    const normalized = locale.trim().toLowerCase();
+    if (normalized.startsWith("en")) {
+        return "en";
+    }
+    return "zh";
+}
 
 function bindEvents() {
     document.querySelectorAll("[data-tab]").forEach((button) => {
@@ -242,13 +263,17 @@ function generateIdempotencyKey() {
 }
 
 function toggleLocale() {
-    state.locale = state.locale === "zh" ? "en" : "zh";
+    setLocale(state.locale === "zh" ? "en" : "zh");
+}
+
+function setLocale(locale) {
+    state.locale = normalizeLocale(locale);
     localStorage.setItem("ui-locale", state.locale);
     applyLocale();
     updateCreateHint();
 
     const detailContent = document.getElementById("detailContent");
-    if (state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
+    if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
         detailContent.textContent = t("detail.empty");
     }
 }
@@ -273,6 +298,12 @@ function applyLocale() {
     const detailContent = document.querySelector("[data-empty-text]");
     if (detailContent && state.selectedPaymentId === null && detailContent.classList.contains("detail-grid--empty")) {
         detailContent.textContent = t("detail.empty");
+    }
+
+    if (state.selectedPayment) {
+        renderDetail(state.selectedPayment);
+        renderStatusFlow(state.selectedPayment, state.selectedHistory);
+        renderHistory(state.selectedHistory);
     }
 }
 
@@ -485,6 +516,8 @@ async function openDetail(paymentId) {
     ]);
 
     if (!detailResult.ok) {
+        state.selectedPayment = null;
+        state.selectedHistory = [];
         detailContent.textContent = t("msg.queryFail", { message: detailResult.error.message });
         showToast(t("msg.detailFail", { message: detailResult.error.message }), "error");
         document.getElementById("statusFlowSection").hidden = true;
@@ -493,6 +526,8 @@ async function openDetail(paymentId) {
     }
 
     const historyRecords = historyResult.ok ? historyResult.data : [];
+    state.selectedPayment = detailResult.data;
+    state.selectedHistory = historyRecords;
     renderDetail(detailResult.data);
     renderStatusFlow(detailResult.data, historyRecords);
     renderHistory(historyRecords);
@@ -507,8 +542,14 @@ function renderStatusFlow(payment, records) {
         return;
     }
 
-    const statusOrder = ["CREATED", "VALIDATED", "SENT"];
-    const labels = [t("flow.created"), t("flow.validated"), t("flow.sent")];
+    const normalStatuses = ["CREATED", "VALIDATED", "SENT", "COMPLETED"];
+    const labelMap = {
+        CREATED: t("flow.created"),
+        VALIDATED: t("flow.validated"),
+        SENT: t("flow.sent"),
+        COMPLETED: t("flow.completed"),
+        FAILED: t("flow.failed")
+    };
 
     const reached = new Set();
     reached.add(payment.status);
@@ -518,37 +559,49 @@ function renderStatusFlow(payment, records) {
         }
     });
 
-    const currentIndex = statusOrder.indexOf(payment.status);
-    const maxReachedIndex = Math.max(
-        ...statusOrder.map((status, idx) => (reached.has(status) ? idx : -1))
-    );
+    const isFailedTriggered = payment.status === "FAILED" || reached.has("FAILED");
+    const statusOrder = [...normalStatuses];
+    if (isFailedTriggered) {
+        const failedRecord = [...(records || [])].reverse().find((record) => record && record.toStatus === "FAILED");
+        const fromStatus = failedRecord && failedRecord.fromStatus;
+        const reachedNormalIndex = Math.max(...normalStatuses.map((status, idx) => (reached.has(status) ? idx : -1)));
+        const insertAfter = normalStatuses.includes(fromStatus)
+            ? normalStatuses.indexOf(fromStatus)
+            : Math.max(0, reachedNormalIndex);
+        statusOrder.splice(insertAfter + 1, 0, "FAILED");
+    }
 
-    const stepClass = (idx) => {
-        if (idx === currentIndex) {
+    const stepClass = (statusCode) => {
+        if (statusCode === payment.status) {
             return "flow-step is-current";
         }
-        if (idx <= maxReachedIndex) {
+        if (reached.has(statusCode)) {
             return "flow-step is-done";
         }
         return "flow-step";
     };
 
     const linkClass = (idx) => {
-        const active = idx < Math.max(currentIndex, maxReachedIndex);
+        const left = statusOrder[idx];
+        const right = statusOrder[idx + 1];
+        const active = Boolean(left && right && reached.has(left) && reached.has(right));
         return `flow-link${active ? " is-active" : ""}`;
     };
 
-    container.innerHTML = `
-        <div class="${stepClass(0)}">${escapeHtml(labels[0])}</div>
-        <div class="${linkClass(0)}" aria-hidden="true"></div>
-        <div class="${stepClass(1)}">${escapeHtml(labels[1])}</div>
-        <div class="${linkClass(1)}" aria-hidden="true"></div>
-        <div class="${stepClass(2)}">${escapeHtml(labels[2])}</div>
-    `;
+    const flowParts = [];
+    statusOrder.forEach((statusCode, index) => {
+        flowParts.push(`<div class="${stepClass(statusCode)} flow-step--${escapeHtml(statusCode)}">${escapeHtml(labelMap[statusCode])}</div>`);
+        if (index < statusOrder.length - 1) {
+            flowParts.push(`<div class="${linkClass(index)}" aria-hidden="true"></div>`);
+        }
+    });
+    container.innerHTML = `<div class="flow-track${isFailedTriggered ? " flow-track--failed" : ""}">${flowParts.join("")}</div>`;
 
     const terminal = document.createElement("div");
     terminal.className = "flow-terminal";
-    terminal.innerHTML = `${escapeHtml(t("flow.current"))}: <span class="status-pill status-${escapeHtml(payment.status || "UNKNOWN")}">${escapeHtml(payment.status || "-")}</span>`;
+    terminal.innerHTML = `
+        <div class="flow-terminal-line">${escapeHtml(t("flow.current"))}: <span class="status-pill status-${escapeHtml(payment.status || "UNKNOWN")}">${escapeHtml(payment.status || "-")}</span></div>
+    `;
     container.appendChild(terminal);
     section.hidden = false;
 }
